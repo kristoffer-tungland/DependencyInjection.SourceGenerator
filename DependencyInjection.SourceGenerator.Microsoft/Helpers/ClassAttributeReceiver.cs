@@ -1,11 +1,8 @@
 ﻿using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis;
-using System.Collections.Generic;
-using System.Linq;
 using DependencyInjection.SourceGenerator.Contracts.Attributes;
-using System;
 
-namespace DependencyInjection.SourceGenerator.Shared;
+namespace DependencyInjection.SourceGenerator.Microsoft.Helpers;
 public class ClassAttributeReceiver : ISyntaxContextReceiver
 {
     private readonly string[] _classAttributes = [nameof(RegisterAttribute), nameof(DecorateAttribute)];

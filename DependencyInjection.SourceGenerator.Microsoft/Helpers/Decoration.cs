@@ -1,7 +1,4 @@
-﻿using DependencyInjection.SourceGenerator.Contracts.Enums;
-using System;
-
-namespace DependencyInjection.SourceGenerator.Shared;
+﻿namespace DependencyInjection.SourceGenerator.Microsoft.Helpers;
 
 internal sealed class Decoration
 {

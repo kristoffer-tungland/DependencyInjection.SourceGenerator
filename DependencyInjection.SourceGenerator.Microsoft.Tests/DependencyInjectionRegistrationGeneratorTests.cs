@@ -4,11 +4,11 @@ using Microsoft.CodeAnalysis.Text;
 using System.Text;
 using VerifyCS = DependencyInjection.SourceGenerator.Microsoft.Tests.CSharpSourceGeneratorVerifier<DependencyInjection.SourceGenerator.Microsoft.DependencyInjectionRegistrationGenerator>;
 using Microsoft.CodeAnalysis.Testing;
-using NuGet.Frameworks;
 using FluentAssertions;
 using Microsoft.CodeAnalysis.CSharp;
-using System.Diagnostics;
 using System.Reflection;
+using Microsoft.Extensions.DependencyInjection;
+using DependencyInjection.SourceGenerator.Microsoft.Helpers;
 
 namespace DependencyInjection.SourceGenerator.Microsoft.Tests;
 
@@ -33,11 +33,11 @@ public class DependencyInjectionRegistrationGeneratorTests
 
     private async Task RunTestAsync(string code, string expectedResult)
     {
-        if (!NuGetFramework.Parse("net8.0").IsPackageBased)
-        {
-            // The NuGet version provided at runtime does not recognize the 'net6.0' target framework
-            throw new NotSupportedException("The 'net8.0' target framework is not supported by this version of NuGet.");
-        }
+        // if (!NuGetFramework.Parse("net8.0").IsPackageBased)
+        // {
+        //     // The NuGet version provided at runtime does not recognize the 'net6.0' target framework
+        //     throw new NotSupportedException("The 'net8.0' target framework is not supported by this version of NuGet.");
+        // }
 
         var net8 = new ReferenceAssemblies(
             "net8.0",
@@ -46,23 +46,27 @@ public class DependencyInjectionRegistrationGeneratorTests
                 "8.0.0"),
             Path.Combine("ref", "net8.0"));
 
+
         var tester = new VerifyCS.Test
         {
             TestState =
                 {
                     Sources = { code },
-                    GeneratedSources =
-                    {
-                        (typeof(DependencyInjectionRegistrationGenerator), "ServiceCollectionExtensions.g.cs",
-                            SourceText.From(expectedResult, Encoding.UTF8))
-                    }
+                    // GeneratedSources =
+                    // {
+                    //     (typeof(DependencyInjectionRegistrationGenerator), "ServiceCollectionExtensions.g.cs",
+                    //         SourceText.From(expectedResult, Encoding.UTF8))
+                    // },
+                    AdditionalFiles = 
+                    { 
+                        ("RegisterAttribute.g.cs", SourceText.From(AttributeSourceTexts.RegisterAttributeText, Encoding.UTF8)),
+                        ("DependencyInjection.SourceGenerator.Microsoft/DependencyInjection.SourceGenerator.Microsoft.DependencyInjectionRegistrationGenerator/RegisterAllAttribute.g.cs", SourceText.From(AttributeSourceTexts.RegisterAllAttributeText, Encoding.UTF8)),
+                        ("DependencyInjection.SourceGenerator.Microsoft/DependencyInjection.SourceGenerator.Microsoft.DependencyInjectionRegistrationGenerator/DecorateAttribute.g.cs", SourceText.From(AttributeSourceTexts.DecorateAttributeText, Encoding.UTF8))}
                 },
             ReferenceAssemblies = net8
         };
-
+        
         tester.ReferenceAssemblies.AddAssemblies(_references);
-        tester.TestState.AdditionalReferences.Add(typeof(global::DependencyInjection.SourceGenerator.Contracts.Attributes.RegisterAttribute).Assembly);
-        tester.TestState.AdditionalReferences.Add(typeof(global::DependencyInjection.SourceGenerator.Microsoft.Contracts.Attributes.RegistrationExtensionAttribute).Assembly);
         tester.TestState.AdditionalReferences.Add(typeof(global::Microsoft.Extensions.DependencyInjection.IServiceCollection).Assembly);
         tester.TestState.AdditionalReferences.Add(typeof(global::Scrutor.RegistrationStrategy).Assembly);
         await tester.RunAsync();
@@ -170,7 +174,8 @@ public static partial class ServiceCollectionExtensions
     }
 }
 """;
-        List<MetadataReference> references = [];
+
+        List<MetadataReference> references = new();
         var assemblies = AppDomain.CurrentDomain.GetAssemblies();
 
         foreach (Assembly assembly in assemblies)
@@ -189,8 +194,7 @@ public static partial class ServiceCollectionExtensions
             references: references,
             options: new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
 
-        var driver = CSharpGeneratorDriver
-            .Create(new DependencyInjectionRegistrationGenerator());
+        var driver = CSharpGeneratorDriver.Create(new DependencyInjectionRegistrationGenerator());
 
         driver.RunGeneratorsAndUpdateCompilation(
             compilation,

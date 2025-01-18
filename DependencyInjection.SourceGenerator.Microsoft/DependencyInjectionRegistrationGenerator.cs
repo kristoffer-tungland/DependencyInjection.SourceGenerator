@@ -3,34 +3,77 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Text;
 using System.Text;
-using DependencyInjection.SourceGenerator.Contracts.Enums;
-using DependencyInjection.SourceGenerator.Shared;
-using DependencyInjection.SourceGenerator.Microsoft.Contracts.Attributes;
+using DependencyInjection.SourceGenerator.Microsoft.Helpers;
+using DependencyInjection.SourceGenerator.Microsoft.Attributes;
+using System.Collections.Immutable;
+using DependencyInjection.SourceGenerator.Microsoft.Enums;
 
 namespace DependencyInjection.SourceGenerator.Microsoft;
 
 public record RegistrationExtension(string ClassFullName, string MethodName, List<Diagnostic> Errors);
 
 [Generator]
-public class DependencyInjectionRegistrationGenerator : ISourceGenerator
+public class DependencyInjectionRegistrationGenerator : IIncrementalGenerator
 {
-    public void Initialize(GeneratorInitializationContext context)
+    public void Initialize(IncrementalGeneratorInitializationContext context)
     {
-        context.RegisterForSyntaxNotifications(() => new ClassAttributeReceiver(additionalMethodAttributes: [nameof(RegistrationExtensionAttribute)]));
+        var classDeclarations = context.SyntaxProvider
+            .CreateSyntaxProvider(
+                predicate: static (s, _) => IsClassWithAttribute(s),
+                transform: static (ctx, _) => GetClassToRegister(ctx))
+            .Where(static m => m is not null);
+
+        var compilationAndClasses = context.CompilationProvider.Combine(classDeclarations.Collect());
+
+        context.RegisterSourceOutput(compilationAndClasses, static (spc, source) => Execute(source.Left, source.Right, spc));
+        context.RegisterPostInitializationOutput(static spc =>
+        {
+            spc.AddSource("RegisterAttribute.g.cs", SourceText.From(AttributeSourceTexts.RegisterAttributeText, Encoding.UTF8));
+            spc.AddSource("RegisterAllAttribute.g.cs", SourceText.From(AttributeSourceTexts.RegisterAllAttributeText, Encoding.UTF8));
+            spc.AddSource("DecorateAttribute.g.cs", SourceText.From(AttributeSourceTexts.DecorateAttributeText, Encoding.UTF8));
+        });
     }
 
-    public void Execute(GeneratorExecutionContext context)
+    private static bool IsClassWithAttribute(SyntaxNode node)
+    {
+        return node is ClassDeclarationSyntax classDeclaration &&
+               classDeclaration.AttributeLists.Count > 0;
+    }
+
+    private static INamedTypeSymbol? GetClassToRegister(GeneratorSyntaxContext context)
+    {
+        var classDeclaration = (ClassDeclarationSyntax)context.Node;
+        var semanticModel = context.SemanticModel;
+
+        if (semanticModel.GetDeclaredSymbol(classDeclaration) is not INamedTypeSymbol classSymbol)
+            return null;
+
+        foreach (var attribute in classSymbol.GetAttributes())
+        {
+            if (attribute.AttributeClass?.Name == nameof(RegistrationExtensionAttribute))
+            {
+                return classSymbol;
+            }
+        }
+
+        return null;
+    }
+
+    private static void Execute(Compilation compilation, ImmutableArray<INamedTypeSymbol?> classesToRegister, SourceProductionContext context)
     {
         var @namespace = "Microsoft.Extensions.DependencyInjection";
-        var safeAssemblyName = EscapeAssemblyNameToMethodName(context.Compilation.AssemblyName);
-        var extensionName = "Add" + safeAssemblyName;
+        var safeAssemblyName = EscapeAssemblyNameToMethodName(compilation.AssemblyName);
 
-        var classesToRegister = RegistrationCollector.GetTypes(context);
-        var registerAllTypes = RegistrationCollector.GetRegisterAllTypes(context);
+        foreach (var classSymbol in classesToRegister)
+        {
+            if (classSymbol is null)
+                continue;
 
-        var source = GenerateExtensionMethod(context, extensionName, @namespace, classesToRegister, registerAllTypes);
-        var sourceText = source.ToFullString();
-        context.AddSource("ServiceCollectionExtensions.g.cs", SourceText.From(sourceText, Encoding.UTF8));
+            var extensionName = "Add" + safeAssemblyName + classSymbol.Name;
+            var source = GenerateExtensionMethod(context, extensionName, @namespace, classSymbol);
+            var sourceText = source.ToFullString();
+            context.AddSource($"{classSymbol.Name}ServiceCollectionExtensions.g.cs", SourceText.From(sourceText, Encoding.UTF8));
+        }
     }
 
     public static string EscapeAssemblyNameToMethodName(string? assemblyName)
@@ -61,67 +104,36 @@ public class DependencyInjectionRegistrationGenerator : ISourceGenerator
         return sb.ToString();
     }
 
-    private static string GetDefaultNamespace(GeneratorExecutionContext context)
-    {
-        var @namespace = context.Compilation.SyntaxTrees
-        .SelectMany(x => x.GetRoot().DescendantNodes())
-        .OfType<NamespaceDeclarationSyntax>()
-        .Select(x => x.Name.ToString())
-        .Min();
-
-        if (@namespace is not null)
-            return @namespace;
-
-        @namespace = context.Compilation.SyntaxTrees
-        .SelectMany(x => x.GetRoot().DescendantNodes())
-        .OfType<FileScopedNamespaceDeclarationSyntax>()
-        .Select(x => x.Name.ToString())
-        .Min();
-
-        if (@namespace is not null)
-            return @namespace;
-
-        throw new NotSupportedException("Unable to calculate namespace");
-    }
-
-    private static CompilationUnitSyntax GenerateExtensionMethod(GeneratorExecutionContext context, string extensionName, string @namespace, IEnumerable<INamedTypeSymbol> classesToRegister, IEnumerable<Registration> additionalRegistrations)
+    private static CompilationUnitSyntax GenerateExtensionMethod(SourceProductionContext context, string extensionName, string @namespace, INamedTypeSymbol classToRegister)
     {
         var bodyMembers = new List<ExpressionStatementSyntax>();
 
-        foreach (var type in classesToRegister)
-        {
-            var registrations = RegistrationMapper.CreateRegistration(type);
-            foreach (var registration in registrations)
-            {
-                bodyMembers.Add(CreateRegistrationSyntax(registration.ServiceType, registration.ImplementationTypeName, registration.Lifetime, registration.ServiceName));                
-            }
-
-            var decoration = DecorationMapper.CreateDecoration(type);
-            if (decoration is not null)
-                bodyMembers.Add(CreateDecorationSyntax(decoration.DecoratedTypeName, decoration.DecoratorTypeName));
-
-            var registrationExtensions = CreateRegistrationExtensions(type);
-
-            foreach (var registrationExtension in registrationExtensions)
-            {
-                if (!registrationExtension.Errors.Any())
-                {
-                    bodyMembers.Add(CreateRegistrationExtensionSyntax(registrationExtension.ClassFullName, registrationExtension.MethodName));
-                    continue;
-                }
-                foreach (var error in registrationExtension.Errors)
-                {
-                    context.ReportDiagnostic(error);
-                }
-            }
-        }
-
-        foreach (var registration in additionalRegistrations)
+        var registrations = RegistrationMapper.CreateRegistration(classToRegister);
+        foreach (var registration in registrations)
         {
             bodyMembers.Add(CreateRegistrationSyntax(registration.ServiceType, registration.ImplementationTypeName, registration.Lifetime, registration.ServiceName));
         }
 
-        var methodModifiers = SyntaxFactory.TokenList([SyntaxFactory.Token(SyntaxKind.PublicKeyword), SyntaxFactory.Token(SyntaxKind.StaticKeyword)]);
+        var decoration = DecorationMapper.CreateDecoration(classToRegister);
+        if (decoration is not null)
+            bodyMembers.Add(CreateDecorationSyntax(decoration.DecoratedTypeName, decoration.DecoratorTypeName));
+
+        var registrationExtensions = CreateRegistrationExtensions(classToRegister);
+
+        foreach (var registrationExtension in registrationExtensions)
+        {
+            if (!registrationExtension.Errors.Any())
+            {
+                bodyMembers.Add(CreateRegistrationExtensionSyntax(registrationExtension.ClassFullName, registrationExtension.MethodName));
+                continue;
+            }
+            foreach (var error in registrationExtension.Errors)
+            {
+                context.ReportDiagnostic(error);
+            }
+        }
+
+        var methodModifiers = SyntaxFactory.TokenList(SyntaxFactory.Token(SyntaxKind.PublicKeyword), SyntaxFactory.Token(SyntaxKind.StaticKeyword));
 
         var serviceCollectionSyntax = SyntaxFactory.QualifiedName(
                             SyntaxFactory.QualifiedName(
@@ -146,14 +158,13 @@ public class DependencyInjectionRegistrationGenerator : ISourceGenerator
                                                 SyntaxFactory.Token(SyntaxKind.ThisKeyword)))
                                         .WithType(serviceCollectionSyntax))));
 
-
         var body = SyntaxFactory.Block(bodyMembers.ToArray());
         var returnStatement = SyntaxFactory.ReturnStatement(SyntaxFactory.IdentifierName("services"));
         body = body.AddStatements(returnStatement);
 
         methodDeclaration = methodDeclaration.WithBody(body);
 
-        var classModifiers = SyntaxFactory.TokenList([SyntaxFactory.Token(SyntaxKind.PublicKeyword), SyntaxFactory.Token(SyntaxKind.StaticKeyword), SyntaxFactory.Token(SyntaxKind.PartialKeyword)]);
+        var classModifiers = SyntaxFactory.TokenList(SyntaxFactory.Token(SyntaxKind.PublicKeyword), SyntaxFactory.Token(SyntaxKind.StaticKeyword), SyntaxFactory.Token(SyntaxKind.PartialKeyword));
         var classDeclaration = SyntaxFactory.ClassDeclaration("ServiceCollectionExtensions")
                     .WithModifiers(classModifiers)
                     .WithMembers(SyntaxFactory.SingletonList<MemberDeclarationSyntax>(methodDeclaration));
@@ -168,7 +179,7 @@ public class DependencyInjectionRegistrationGenerator : ISourceGenerator
                 SyntaxFactory.IdentifierName("Extensions")),
             SyntaxFactory.IdentifierName("DependencyInjection")));
 
-        return Trivia.CreateCompilationUnitSyntax(classDeclaration, @namespace, [dependencyInjectionUsingDirective]);
+        return Trivia.CreateCompilationUnitSyntax(classDeclaration, @namespace, new[] { dependencyInjectionUsingDirective });
     }
 
     internal static List<RegistrationExtension> CreateRegistrationExtensions(INamedTypeSymbol type)
@@ -298,17 +309,10 @@ public class DependencyInjectionRegistrationGenerator : ISourceGenerator
                             SyntaxFactory.IdentifierName("serviceRegistry"))))));
     }
 
-    private static ExpressionStatementSyntax CreateRegistrationSyntax(string? serviceType, string implementation, Lifetime lifetime, string? serviceName)
+    private static ExpressionStatementSyntax CreateRegistrationSyntax(string? serviceType, string implementation, ServiceLifetime lifetime, string? serviceName)
     {
         var keyed = serviceName is null ? string.Empty : "Keyed";
-        var lifetimeName = lifetime switch
-        {
-            Lifetime.Singleton => $"Singleton",
-            Lifetime.Scoped => "Scoped",
-            Lifetime.Transient => "Transient",
-            _ => throw new ArgumentOutOfRangeException(nameof(lifetime), lifetime, null)
-        };
-        var methodName = $"Add{keyed}{lifetimeName}";
+        var methodName = $"Add{keyed}{lifetime}";
 
         SyntaxNodeOrToken[] tokens;
         if (serviceType is null)

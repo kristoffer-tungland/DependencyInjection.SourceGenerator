@@ -1,12 +1,8 @@
-﻿using DependencyInjection.SourceGenerator.Contracts.Attributes;
-using DependencyInjection.SourceGenerator.Contracts.Enums;
+﻿using DependencyInjection.SourceGenerator.Microsoft.Enums;
 using Microsoft.CodeAnalysis;
-using System;
-using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Linq;
 
-namespace DependencyInjection.SourceGenerator.Shared;
+namespace DependencyInjection.SourceGenerator.Microsoft.Helpers;
 internal static class TypeHelper
 {
     private static readonly SymbolDisplayFormat _displayFormat = SymbolDisplayFormat.FullyQualifiedFormat;
@@ -57,7 +53,7 @@ internal static class TypeHelper
         return default;
     }
 
-    internal static Lifetime? GetLifetimeFromAttribute(AttributeData attribute)
+    internal static ServiceLifetime? GetLifetimeFromAttribute(AttributeData attribute)
     {
         var lifetimeArgument = attribute.NamedArguments.FirstOrDefault(arg => arg.Key == "Lifetime");
         if (!lifetimeArgument.Value.IsNull && IsLifetimeType(lifetimeArgument.Value.Type) && TryParseLifetime(lifetimeArgument.Value.Value, out var lifetime))
@@ -79,7 +75,7 @@ internal static class TypeHelper
             return typeSymbol?.TypeKind == TypeKind.Enum && typeSymbol.Name == "Lifetime";
         }
 
-        bool TryParseLifetime(object? obj, out Lifetime lifetime)
+        bool TryParseLifetime(object? obj, out ServiceLifetime lifetime)
         {
             lifetime = default;
             return obj?.ToString() is { } lifetimeText && Enum.TryParse(lifetimeText, out lifetime);

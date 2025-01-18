@@ -1,23 +1,23 @@
 ﻿using DependencyInjection.SourceGenerator.Contracts.Attributes;
-using DependencyInjection.SourceGenerator.Contracts.Enums;
+using DependencyInjection.SourceGenerator.Microsoft.Enums;
 
 namespace DependencyInjection.SourceGenerator.Contracts.Attributes;
 
 public interface IRegisterAllAttribute
 {
-    Lifetime Lifetime { get;}
+    ServiceLifetime Lifetime { get;}
     bool IncludeServiceName { get; } 
 }
 
 [AttributeUsage(AttributeTargets.Assembly, AllowMultiple = true)]
-public class RegisterAllAttribute(Type serviceType) : Attribute, IRegisterAllAttribute
+internal class RegisterAllAttribute(Type serviceType) : Attribute, IRegisterAllAttribute
 {
-    public Lifetime Lifetime { get; set; } = Lifetime.Transient;
+    public ServiceLifetime Lifetime { get; set; } = ServiceLifetime.Transient;
     public Type ServiceType { get; set; } = serviceType;
 
     public bool IncludeServiceName { get; set; }
 
-    public RegisterAllAttribute(Type serviceType, Lifetime lifetime) : this(serviceType)
+    public RegisterAllAttribute(Type serviceType, ServiceLifetime lifetime) : this(serviceType)
     {
         Lifetime = lifetime;
     }
@@ -25,8 +25,8 @@ public class RegisterAllAttribute(Type serviceType) : Attribute, IRegisterAllAtt
 
 
 [AttributeUsage(AttributeTargets.Assembly, AllowMultiple = true)]
-public class RegisterAllAttribute<TServiceType> : Attribute, IRegisterAllAttribute
+internal class RegisterAllAttribute<TServiceType> : Attribute, IRegisterAllAttribute
 {
-    public Lifetime Lifetime { get; set; } = Lifetime.Transient;
+    public ServiceLifetime Lifetime { get; set; } = ServiceLifetime.Transient;
     public bool IncludeServiceName { get; set; }
 }

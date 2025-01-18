@@ -6,7 +6,6 @@ Add the "Register" attribute to the class you want to register. The attribute ta
 
 This library supports the following dependency injection frameworks, follow the links for more information on how to use them:
 - [Microsoft.Extensions.DependencyInjection](DependencyInjection.SourceGenerator.Microsoft/README.md)
-- [LightInject](DependencyInjection.SourceGenerator.LightInject/README.md)
 
 To use this library you need to install the source generator package and the contacts package. 
 The source generator package is a development dependency and will not be exposed as a dependency to consumers of your projects, while the contracts package contains the attributes and enums used to configure the generator.
@@ -14,13 +13,6 @@ The source generator package is a development dependency and will not be exposed
 ### Microsoft.Extensions.DependencyInjection
 * #### DependencyInjection.SourceGenerator.Microsoft [![NuGet](https://img.shields.io/nuget/vpre/DependencyInjection.SourceGenerator.Microsoft.svg)](https://www.nuget.org/packages/DependencyInjection.SourceGenerator.Microsoft)
 * #### DependencyInjection.SourceGenerator.Microsoft.Contracts [![NuGet](https://img.shields.io/nuget/vpre/DependencyInjection.SourceGenerator.Microsoft.Contracts.svg)](https://www.nuget.org/packages/DependencyInjection.SourceGenerator.Microsoft.Contracts)
-
-### LightInject
-* #### DependencyInjection.SourceGenerator.LightInject [![NuGet](https://img.shields.io/nuget/vpre/DependencyInjection.SourceGenerator.LightInject.svg)](https://www.nuget.org/packages/DependencyInjection.SourceGenerator.LightInject)
-* #### DependencyInjection.SourceGenerator.LightInject.Contracts [![NuGet](https://img.shields.io/nuget/vpre/DependencyInjection.SourceGenerator.LightInject.Contracts.svg)](https://www.nuget.org/packages/DependencyInjection.SourceGenerator.LightInject.Contracts)
-
-Both contracts packages references the shared contracts package, which contains the attributes and enums used to configure the generator.
-* #### DependencyInjection.SourceGenerator.Contracts [![NuGet](https://img.shields.io/nuget/vpre/DependencyInjection.SourceGenerator.Contracts.svg)](https://www.nuget.org/packages/DependencyInjection.SourceGenerator.Contracts)
 
 ## Lifetime
 The lifetime is an enum with the following values:

@@ -5,7 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace DependencyInjection.SourceGenerator.Shared;
+namespace DependencyInjection.SourceGenerator.Microsoft.Helpers;
 internal static class Trivia
 {
     internal static AttributeListSyntax CreateExcludeFromCodeCoverage()

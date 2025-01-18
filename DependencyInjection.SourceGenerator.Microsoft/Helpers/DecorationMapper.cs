@@ -2,7 +2,7 @@
 using Microsoft.CodeAnalysis;
 using System.Linq;
 
-namespace DependencyInjection.SourceGenerator.Shared;
+namespace DependencyInjection.SourceGenerator.Microsoft.Helpers;
 internal static class DecorationMapper
 {
     internal static Decoration? CreateDecoration(INamedTypeSymbol type)

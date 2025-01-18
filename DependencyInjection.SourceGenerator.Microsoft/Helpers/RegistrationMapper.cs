@@ -1,11 +1,8 @@
 ﻿using DependencyInjection.SourceGenerator.Contracts.Attributes;
-using DependencyInjection.SourceGenerator.Contracts.Enums;
+using DependencyInjection.SourceGenerator.Microsoft.Enums;
 using Microsoft.CodeAnalysis;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 
-namespace DependencyInjection.SourceGenerator.Shared;
+namespace DependencyInjection.SourceGenerator.Microsoft.Helpers;
 internal static class RegistrationMapper
 {
     internal static List<Registration> CreateRegistration(INamedTypeSymbol type)
@@ -23,7 +20,7 @@ internal static class RegistrationMapper
             if (serviceType is null)
                 continue;
 
-            var lifetime = TypeHelper.GetLifetimeFromAttribute(attribute) ?? Lifetime.Transient;
+            var lifetime = TypeHelper.GetLifetimeFromAttribute(attribute) ?? ServiceLifetime.Transient;
 
             var serviceNameArgument = TypeHelper.GetAttributeValue(attribute, nameof(RegisterAttribute.ServiceName));
 

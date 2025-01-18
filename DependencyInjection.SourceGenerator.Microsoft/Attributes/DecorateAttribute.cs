@@ -1,15 +1,14 @@
-﻿using DependencyInjection.SourceGenerator.Contracts.Enums;
-using System;
+﻿using System;
 
 namespace DependencyInjection.SourceGenerator.Contracts.Attributes;
 
 [AttributeUsage(AttributeTargets.Class)]
-public class DecorateAttribute : Attribute
+internal class DecorateAttribute : Attribute
 {
     public Type? ServiceType { get; set; }
 }
 
 [AttributeUsage(AttributeTargets.Class)]
-public class DecorateAttribute<TServiceType> : Attribute
+internal class DecorateAttribute<TServiceType> : Attribute
 {
 }

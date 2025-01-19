@@ -1,6 +1,6 @@
 ﻿using DependencyInjection.SourceGenerator.Microsoft.Enums;
 
-namespace DependencyInjection.SourceGenerator.Contracts.Attributes;
+namespace Microsoft.Extensions.DependencyInjection;
 public interface IRegisterAttribute
 {
     public ServiceLifetime Lifetime { get; }

@@ -1,6 +1,6 @@
 ﻿using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis;
-using DependencyInjection.SourceGenerator.Contracts.Attributes;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace DependencyInjection.SourceGenerator.Microsoft.Helpers;
 public class ClassAttributeReceiver : ISyntaxContextReceiver

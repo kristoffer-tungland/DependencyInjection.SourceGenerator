@@ -46,8 +46,8 @@ internal static class Trivia
 
     internal static CompilationUnitSyntax CreateCompilationUnitSyntax(ClassDeclarationSyntax classDeclaration, string @namespace, UsingDirectiveSyntax[]? usings = null)
     {
-        var excludeFromCodeCoverageSyntax = CreateExcludeFromCodeCoverage();
-        classDeclaration = classDeclaration.AddAttributeLists(excludeFromCodeCoverageSyntax);
+        // var excludeFromCodeCoverageSyntax = CreateExcludeFromCodeCoverage();
+        // classDeclaration = classDeclaration.AddAttributeLists(excludeFromCodeCoverageSyntax);
 
         var trivia = Trivia.CreateTrivia();
         var namespaceDeclaration = SyntaxFactory.FileScopedNamespaceDeclaration(SyntaxFactory.IdentifierName(@namespace))

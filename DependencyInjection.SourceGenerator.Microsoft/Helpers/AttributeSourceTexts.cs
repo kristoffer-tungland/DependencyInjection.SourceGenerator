@@ -2,9 +2,30 @@ namespace DependencyInjection.SourceGenerator.Microsoft.Helpers;
 
 public static class AttributeSourceTexts
 {
-    public const string RegisterAttributeText = @"
+    public static string CreateDefaultServiceRegistrationsClassText(string assemblyName) => 
+    $$"""
+#nullable enable
+namespace Microsoft.Extensions.DependencyInjection
+{
+    [global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
+    public static partial class ServiceCollectionExtensions
+    {
+        public static partial global::Microsoft.Extensions.DependencyInjection.IServiceCollection Add{{assemblyName}}(this global::Microsoft.Extensions.DependencyInjection.IServiceCollection services)
+        {
+            return services;
+        }
+    }
 
-namespace global::Microsoft.Extensions.DependencyInjection
+    public static partial class ServiceCollectionExtensions
+    {
+        public static partial global::Microsoft.Extensions.DependencyInjection.IServiceCollection Add{{assemblyName}}(this global::Microsoft.Extensions.DependencyInjection.IServiceCollection services);
+    }
+}
+""";
+
+    public const string RegisterAttributeText = @"
+#nullable enable
+namespace Microsoft.Extensions.DependencyInjection
 {
     [global::System.AttributeUsage(global::System.AttributeTargets.Class, AllowMultiple = true)]
     internal class RegisterAttribute : global::System.Attribute
@@ -23,8 +44,8 @@ namespace global::Microsoft.Extensions.DependencyInjection
 }";
 
     public const string RegisterAllAttributeText = @"
-
-namespace global::Microsoft.Extensions.DependencyInjection
+#nullable enable
+namespace Microsoft.Extensions.DependencyInjection
 {
     [global::System.AttributeUsage(global::System.AttributeTargets.Assembly, AllowMultiple = true)]
     internal class RegisterAllAttribute : global::System.Attribute
@@ -53,8 +74,8 @@ namespace global::Microsoft.Extensions.DependencyInjection
 }";
 
     public const string DecorateAttributeText = @"
-
-namespace global::Microsoft.Extensions.DependencyInjection
+#nullable enable
+namespace Microsoft.Extensions.DependencyInjection
 {
     [global::System.AttributeUsage(global::System.AttributeTargets.Class)]
     internal class DecorateAttribute : global::System.Attribute

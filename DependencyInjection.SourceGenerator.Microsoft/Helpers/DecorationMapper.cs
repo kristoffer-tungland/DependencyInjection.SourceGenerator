@@ -1,6 +1,5 @@
-﻿using DependencyInjection.SourceGenerator.Contracts.Attributes;
-using Microsoft.CodeAnalysis;
-using System.Linq;
+﻿using Microsoft.CodeAnalysis;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace DependencyInjection.SourceGenerator.Microsoft.Helpers;
 internal static class DecorationMapper

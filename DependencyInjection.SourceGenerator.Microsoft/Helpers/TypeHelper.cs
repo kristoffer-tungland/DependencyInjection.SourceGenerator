@@ -72,7 +72,7 @@ internal static class TypeHelper
 
         bool IsLifetimeType(ITypeSymbol? typeSymbol)
         {
-            return typeSymbol?.TypeKind == TypeKind.Enum && typeSymbol.Name == "Lifetime";
+            return typeSymbol?.TypeKind == TypeKind.Enum && typeSymbol.Name == "ServiceLifetime";
         }
 
         bool TryParseLifetime(object? obj, out ServiceLifetime lifetime)

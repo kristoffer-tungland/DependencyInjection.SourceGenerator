@@ -1,6 +1,6 @@
-﻿using DependencyInjection.SourceGenerator.Contracts.Attributes;
-using DependencyInjection.SourceGenerator.Microsoft.Enums;
+﻿using DependencyInjection.SourceGenerator.Microsoft.Enums;
 using Microsoft.CodeAnalysis;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace DependencyInjection.SourceGenerator.Microsoft.Helpers;
 internal static class RegistrationMapper

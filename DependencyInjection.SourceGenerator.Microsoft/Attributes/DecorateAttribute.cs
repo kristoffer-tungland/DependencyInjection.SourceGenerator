@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace DependencyInjection.SourceGenerator.Contracts.Attributes;
+namespace Microsoft.Extensions.DependencyInjection;
 
 [AttributeUsage(AttributeTargets.Class)]
 internal class DecorateAttribute : Attribute

@@ -1,7 +1,6 @@
-﻿using DependencyInjection.SourceGenerator.Contracts.Attributes;
-using DependencyInjection.SourceGenerator.Microsoft.Enums;
+﻿using DependencyInjection.SourceGenerator.Microsoft.Enums;
 
-namespace DependencyInjection.SourceGenerator.Contracts.Attributes;
+namespace Microsoft.Extensions.DependencyInjection;
 
 public interface IRegisterAllAttribute
 {

@@ -32,6 +32,7 @@ namespace Microsoft.Extensions.DependencyInjection
     {
         public global::Microsoft.Extensions.DependencyInjection.ServiceLifetime Lifetime { get; set; } = global::Microsoft.Extensions.DependencyInjection.ServiceLifetime.Transient;
         public string? ServiceName { get; set; }
+        public bool IncludeFactory { get; set; }
         public global::System.Type? ServiceType { get; set; }
     }
 
@@ -40,6 +41,7 @@ namespace Microsoft.Extensions.DependencyInjection
     {
         public global::Microsoft.Extensions.DependencyInjection.ServiceLifetime Lifetime { get; set; } = global::Microsoft.Extensions.DependencyInjection.ServiceLifetime.Transient;
         public string? ServiceName { get; set; }
+        public bool IncludeFactory { get; set; }
     }
 }";
 
@@ -53,6 +55,7 @@ namespace Microsoft.Extensions.DependencyInjection
         public global::Microsoft.Extensions.DependencyInjection.ServiceLifetime Lifetime { get; set; } = global::Microsoft.Extensions.DependencyInjection.ServiceLifetime.Transient;
         public global::System.Type ServiceType { get; set; }
         public bool IncludeServiceName { get; set; }
+        public bool IncludeFactory { get; set; }
 
         public RegisterAllAttribute(global::System.Type serviceType)
         {
@@ -70,6 +73,7 @@ namespace Microsoft.Extensions.DependencyInjection
     {
         public global::Microsoft.Extensions.DependencyInjection.ServiceLifetime Lifetime { get; set; } = global::Microsoft.Extensions.DependencyInjection.ServiceLifetime.Transient;
         public bool IncludeServiceName { get; set; }
+        public bool IncludeFactory { get; set; }
     }
 }";
 

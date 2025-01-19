@@ -26,6 +26,8 @@ internal static class RegistrationMapper
 
             var serviceNameArgument = TypeHelper.GetAttributeValue(attribute, nameof(RegisterAttribute.ServiceName));
 
+            var includeFactory = TypeHelper.GetAttributeValue(attribute, nameof(RegisterAttribute.IncludeFactory)) as bool? ?? false;
+
             // Get the value of the property
             var serviceName = serviceNameArgument?.ToString();
 
@@ -41,6 +43,7 @@ internal static class RegistrationMapper
             {
                 ImplementationTypeName = implementationTypeName,
                 Lifetime = lifetime,
+                IncludeFactory = includeFactory,
                 ServiceName = serviceName,
                 ServiceType = serviceType?.Name
             };
@@ -50,7 +53,7 @@ internal static class RegistrationMapper
         return result;
     }
 
-    public static ExpressionStatementSyntax CreateRegistrationSyntax(string? serviceType, string implementation, ServiceLifetime lifetime, string? serviceName)
+    public static (ExpressionStatementSyntax registrationExpression, ExpressionStatementSyntax? factoryExpression) CreateRegistrationSyntax(string? serviceType, string implementation, ServiceLifetime lifetime, string? serviceName, bool includeFactory)
     {
         if (serviceType is not null)
         {
@@ -94,6 +97,65 @@ internal static class RegistrationMapper
                                         SyntaxKind.StringLiteralExpression,
                                         SyntaxFactory.Literal(serviceName)))));
 
+        }
+
+        var expression = SyntaxFactory.InvocationExpression(accessExpression)
+              .WithArgumentList(argumentList);
+
+        ExpressionStatementSyntax? factoryExpression = null;
+        if (includeFactory)
+            factoryExpression = CreateFactorySyntax(serviceType, implementation, lifetime, serviceName);
+        return (SyntaxFactory.ExpressionStatement(expression), factoryExpression);
+    }
+
+    private static ExpressionStatementSyntax? CreateFactorySyntax(string? serviceType, string implementation, ServiceLifetime lifetime, string? serviceName)
+    {
+        var factoryMethodName = $"Add{(serviceName is null ? string.Empty : "Keyed")}{lifetime}";
+
+        SyntaxNodeOrToken[] tokens;
+        if (serviceType is null)
+        {
+            tokens = new SyntaxNodeOrToken[] { SyntaxFactory.IdentifierName($"global::System.Func<{implementation}>") };
+        }
+        else
+        {
+            tokens = new SyntaxNodeOrToken[]
+            {
+                SyntaxFactory.IdentifierName($"global::System.Func<{serviceType}>")
+            };
+        }
+
+        var accessExpression = SyntaxFactory.MemberAccessExpression(
+              SyntaxKind.SimpleMemberAccessExpression,
+              SyntaxFactory.IdentifierName("services"),
+              SyntaxFactory.GenericName(
+                  SyntaxFactory.Identifier(factoryMethodName))
+              .WithTypeArgumentList(
+                  SyntaxFactory.TypeArgumentList(
+                      SyntaxFactory.SeparatedList<TypeSyntax>(tokens))));
+
+        var argumentList = SyntaxFactory.ArgumentList(
+            SyntaxFactory.SingletonSeparatedList<ArgumentSyntax>(
+                SyntaxFactory.Argument(
+                    SyntaxFactory.SimpleLambdaExpression(
+                        SyntaxFactory.Parameter(SyntaxFactory.Identifier("factory")),
+                        SyntaxFactory.MemberAccessExpression(
+                            SyntaxKind.SimpleMemberAccessExpression,
+                            SyntaxFactory.IdentifierName("factory"),
+                            SyntaxFactory.GenericName(
+                                SyntaxFactory.Identifier("GetRequiredService"))
+                            .WithTypeArgumentList(
+                                SyntaxFactory.TypeArgumentList(
+                                    SyntaxFactory.SingletonSeparatedList<TypeSyntax>(
+                                        SyntaxFactory.IdentifierName(serviceType ?? implementation)))))))));
+
+        if (serviceName is not null)
+        {
+            argumentList = argumentList.AddArguments(
+                SyntaxFactory.Argument(
+                    SyntaxFactory.LiteralExpression(
+                        SyntaxKind.StringLiteralExpression,
+                        SyntaxFactory.Literal(serviceName))));
         }
 
         var expression = SyntaxFactory.InvocationExpression(accessExpression)

@@ -79,7 +79,12 @@ public class DependencyInjectionRegistrationGenerator : IIncrementalGenerator
             var registrations = RegistrationMapper.CreateRegistration(classSymbol);
             foreach (var registration in registrations)
             {
-                bodyMembers.Add(RegistrationMapper.CreateRegistrationSyntax(registration.ServiceType, registration.ImplementationTypeName, registration.Lifetime, registration.ServiceName));
+                var (registrationExpression, factoryExpression) = RegistrationMapper.CreateRegistrationSyntax(registration.ServiceType, registration.ImplementationTypeName, registration.Lifetime, registration.ServiceName, registration.IncludeFactory);
+                bodyMembers.Add(registrationExpression);
+                if (factoryExpression is not null)
+                {
+                    bodyMembers.Add(factoryExpression);
+                }
             }
 
             var decoration = DecorationMapper.CreateDecoration(classSymbol);

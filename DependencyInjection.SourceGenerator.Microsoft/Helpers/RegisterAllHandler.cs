@@ -14,7 +14,7 @@ public static class RegisterAllHandler
     public static void Process(Compilation compilation, List<ExpressionStatementSyntax> bodyMembers)
     {
         var registerAllAttributes = compilation.Assembly.GetAttributes().Where(a => a.AttributeClass?.Name == nameof(RegisterAllAttribute)).ToArray();
-        
+
         foreach (var attribute in registerAllAttributes)
         {
             var serviceType = TypeHelper.GetServiceTypeFromAttribute(attribute);
@@ -23,11 +23,15 @@ public static class RegisterAllHandler
 
             var lifetime = TypeHelper.GetLifetimeFromAttribute(attribute) ?? ServiceLifetime.Transient;
             var includeServiceName = TypeHelper.GetAttributeValue(attribute, nameof(RegisterAllAttribute.IncludeServiceName)) as bool? ?? false;
+            var includeFactory = TypeHelper.GetAttributeValue(attribute, nameof(RegisterAllAttribute.IncludeFactory)) as bool? ?? false;
             var implementations = ImplementationLookup.GetImplementations(compilation, serviceType);
             foreach (var (implementationType, actualServiceType) in implementations)
             {
                 var serviceName = includeServiceName ? implementationType.Name : null;
-                bodyMembers.Add(RegistrationMapper.CreateRegistrationSyntax(actualServiceType.ToDisplayString(), implementationType.ToDisplayString(), lifetime, serviceName));
+                var (registration, factory) = RegistrationMapper.CreateRegistrationSyntax(actualServiceType.ToDisplayString(), implementationType.ToDisplayString(), lifetime, serviceName, includeFactory);
+                bodyMembers.Add(registration);
+                if (factory is not null)
+                    bodyMembers.Add(factory);
             }
         }
     }

@@ -21,7 +21,7 @@ public class DependencyInjectionRegistrationGeneratorTests
 
         var dependencyInjectionAssembly = typeof(ServiceLifetime).Assembly;
         if (!assemblies.Contains(dependencyInjectionAssembly))
-            assemblies.Add(dependencyInjectionAssembly);        
+            assemblies.Add(dependencyInjectionAssembly);
 
         var scrutorAssembly = typeof(Scrutor.DecorationStrategy).Assembly;
         if (!assemblies.Contains(scrutorAssembly))
@@ -39,9 +39,6 @@ public class DependencyInjectionRegistrationGeneratorTests
             syntaxTrees: [syntax],
             references: references,
             options: new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
-
-        // var diagnostics = compilation.GetDiagnostics();
-        // diagnostics.Should().BeEmpty("because there should be no compilation errors");
 
         var driver = CSharpGeneratorDriver.Create(new DependencyInjectionRegistrationGenerator());
 
@@ -88,6 +85,23 @@ using global::Microsoft.Extensions.DependencyInjection;
 namespace DependencyInjection.SourceGenerator.Microsoft.Demo;
 
 [Register]
+public class Service : IService {}
+public interface IService {}
+
+""";
+
+        await RunTestAsync(code);
+    }
+
+    [Fact]
+    public async Task Register_WithFactory()
+    {
+        var code = """
+using global::Microsoft.Extensions.DependencyInjection;
+
+namespace DependencyInjection.SourceGenerator.Microsoft.Demo;
+
+[Register(IncludeFactory = true)]
 public class Service : IService {}
 public interface IService {}
 

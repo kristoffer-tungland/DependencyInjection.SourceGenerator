@@ -291,7 +291,6 @@ public interface IServiceB {}
     {
         var code = """
 using global::Microsoft.Extensions.DependencyInjection;
-using global::DependencyInjection.SourceGenerator.Contracts.Enums;
 
 [assembly: RegisterAll<global::DependencyInjection.SourceGenerator.Microsoft.Demo.IService>(Lifetime = ServiceLifetime.Singleton)]
 
@@ -301,18 +300,6 @@ public class Service1 : IService {}
 public class Service2 : IService {}
 public interface IService {}
 
-""";
-
-        var expected = """
-public static partial class ServiceCollectionExtensions
-{
-    public static global::Microsoft.Extensions.DependencyInjection.IServiceCollection AddTestProject(this global::Microsoft.Extensions.DependencyInjection.IServiceCollection services)
-    {
-        services.AddSingleton<global::DependencyInjection.SourceGenerator.Microsoft.Demo.IService, global::DependencyInjection.SourceGenerator.Microsoft.Demo.Service2>();
-        services.AddSingleton<global::DependencyInjection.SourceGenerator.Microsoft.Demo.IService, global::DependencyInjection.SourceGenerator.Microsoft.Demo.Service1>();
-        return services;
-    }
-}
 """;
 
         await RunTestAsync(code);
@@ -334,18 +321,6 @@ public abstract class MyBase {}
 
 """;
 
-        var expected = """
-public static partial class ServiceCollectionExtensions
-{
-    public static global::Microsoft.Extensions.DependencyInjection.IServiceCollection AddTestProject(this global::Microsoft.Extensions.DependencyInjection.IServiceCollection services)
-    {
-        services.AddKeyedTransient<global::DependencyInjection.SourceGenerator.Microsoft.Demo.MyBase, global::DependencyInjection.SourceGenerator.Microsoft.Demo.Service2>("Service2");
-        services.AddKeyedTransient<global::DependencyInjection.SourceGenerator.Microsoft.Demo.MyBase, global::DependencyInjection.SourceGenerator.Microsoft.Demo.Service1>("Service1");
-        return services;
-    }
-}
-""";
-
         await RunTestAsync(code);
     }
 
@@ -363,18 +338,6 @@ public class Service1 : MyBase {}
 public class Service2 : MyBase {}
 public abstract class MyBase {}
 
-""";
-
-        var expected = """
-public static partial class ServiceCollectionExtensions
-{
-    public static global::Microsoft.Extensions.DependencyInjection.IServiceCollection AddTestProject(this global::Microsoft.Extensions.DependencyInjection.IServiceCollection services)
-    {
-        services.AddTransient<global::DependencyInjection.SourceGenerator.Microsoft.Demo.MyBase, global::DependencyInjection.SourceGenerator.Microsoft.Demo.Service2>();
-        services.AddTransient<global::DependencyInjection.SourceGenerator.Microsoft.Demo.MyBase, global::DependencyInjection.SourceGenerator.Microsoft.Demo.Service1>();
-        return services;
-    }
-}
 """;
 
         await RunTestAsync(code);
@@ -398,18 +361,6 @@ public class Service2 : IService<int> {}
 
 """;
 
-        var expected = """
-public static partial class ServiceCollectionExtensions
-{
-    public static global::Microsoft.Extensions.DependencyInjection.IServiceCollection AddTestProject(this global::Microsoft.Extensions.DependencyInjection.IServiceCollection services)
-    {
-        services.AddTransient<global::DependencyInjection.SourceGenerator.Microsoft.Demo.IService<int>, global::DependencyInjection.SourceGenerator.Microsoft.Demo.Service2>();
-        services.AddTransient<global::DependencyInjection.SourceGenerator.Microsoft.Demo.IService<string>, global::DependencyInjection.SourceGenerator.Microsoft.Demo.Service1>();
-        return services;
-    }
-}
-""";
-
         await RunTestAsync(code);
     }
 
@@ -428,18 +379,6 @@ public abstract class Base<TType> { }
 public class Service1 : Base<string> {}
 public class Service2 : Base<int> {}
 
-""";
-
-        var expected = """
-public static partial class ServiceCollectionExtensions
-{
-    public static global::Microsoft.Extensions.DependencyInjection.IServiceCollection AddTestProject(this global::Microsoft.Extensions.DependencyInjection.IServiceCollection services)
-    {
-        services.AddTransient<global::DependencyInjection.SourceGenerator.Microsoft.Demo.Base<int>, global::DependencyInjection.SourceGenerator.Microsoft.Demo.Service2>();
-        services.AddTransient<global::DependencyInjection.SourceGenerator.Microsoft.Demo.Base<string>, global::DependencyInjection.SourceGenerator.Microsoft.Demo.Service1>();
-        return services;
-    }
-}
 """;
 
         await RunTestAsync(code);

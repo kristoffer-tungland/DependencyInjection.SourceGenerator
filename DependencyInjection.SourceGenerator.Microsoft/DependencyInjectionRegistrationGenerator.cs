@@ -7,6 +7,7 @@ using DependencyInjection.SourceGenerator.Microsoft.Helpers;
 using System.Collections.Immutable;
 using DependencyInjection.SourceGenerator.Microsoft.Enums;
 using Microsoft.Extensions.DependencyInjection;
+using CodeGenHelpers.Internals;
 
 namespace DependencyInjection.SourceGenerator.Microsoft;
 
@@ -19,8 +20,8 @@ public class DependencyInjectionRegistrationGenerator : IIncrementalGenerator
     {
         var declarations = context.SyntaxProvider
             .CreateSyntaxProvider(
-                predicate: static (s, _) => IsClassOrAssemblyWithAttribute(s),
-                transform: static (ctx, _) => GetClassOrAssemblyToRegister(ctx))
+                predicate: static (s, _) => IsClassWithAttributes(s),
+                transform: static (ctx, _) => GetClassToRegister(ctx))
             .Where(static m => m is not null);
 
         var compilationAndDeclarations = context.CompilationProvider.Combine(declarations.Collect());
@@ -33,42 +34,29 @@ public class DependencyInjectionRegistrationGenerator : IIncrementalGenerator
         });
     }
 
-    private static bool IsClassOrAssemblyWithAttribute(SyntaxNode node)
+    private static bool IsClassWithAttributes(SyntaxNode node)
     {
-        return (node is ClassDeclarationSyntax classDeclaration && classDeclaration.AttributeLists.Count > 0) ||
-               (node is AttributeListSyntax attributeList && attributeList.Target?.Identifier.Kind() == SyntaxKind.AssemblyKeyword);
+        return node is ClassDeclarationSyntax classDeclaration && classDeclaration.AttributeLists.Count > 0;
     }
 
-    private static INamedTypeSymbol? GetClassOrAssemblyToRegister(GeneratorSyntaxContext context)
+    private static INamedTypeSymbol? GetClassToRegister(GeneratorSyntaxContext context)
     {
-        if (context.Node is ClassDeclarationSyntax classDeclaration)
-        {
-            var semanticModel = context.SemanticModel;
-            if (semanticModel.GetDeclaredSymbol(classDeclaration) is not INamedTypeSymbol classSymbol)
-                return null;
+        if (context.Node is not ClassDeclarationSyntax classDeclaration)
+            return null;
 
-            foreach (var attribute in classSymbol.GetAttributes())
-            {
-                if (attribute.AttributeClass?.Name == nameof(RegisterAttribute)
-                    || attribute.AttributeClass?.Name == nameof(RegisterAllAttribute)
-                    || attribute.AttributeClass?.Name == nameof(DecorateAttribute))
-                {
-                    return classSymbol;
-                }
-            }
-        }
-        else if (context.Node is AttributeListSyntax attributeList)
+        var semanticModel = context.SemanticModel;
+        if (semanticModel.GetDeclaredSymbol(classDeclaration) is not INamedTypeSymbol classSymbol)
+            return null;
+
+        foreach (var attribute in classSymbol.GetAttributes())
         {
-            var semanticModel = context.SemanticModel;
-            foreach (var attribute in attributeList.Attributes)
+            if (attribute.AttributeClass?.Name == nameof(RegisterAttribute)
+                || attribute.AttributeClass?.Name == nameof(DecorateAttribute))
             {
-                var attributeSymbol = semanticModel.GetSymbolInfo(attribute).Symbol?.ContainingType;
-                if (attributeSymbol?.Name == nameof(RegisterAllAttribute))
-                {
-                    return attributeSymbol;
-                }
+                return classSymbol;
             }
         }
+
 
         return null;
     }
@@ -80,9 +68,8 @@ public class DependencyInjectionRegistrationGenerator : IIncrementalGenerator
         var extensionName = "Add" + safeAssemblyName;
 
         var bodyMembers = new List<ExpressionStatementSyntax>();
-        
+
         var includeScrutor = false;
-        var registerAllAttributes = new List<AttributeData>();
 
         foreach (var classSymbol in classesToRegister)
         {
@@ -92,7 +79,7 @@ public class DependencyInjectionRegistrationGenerator : IIncrementalGenerator
             var registrations = RegistrationMapper.CreateRegistration(classSymbol);
             foreach (var registration in registrations)
             {
-                bodyMembers.Add(CreateRegistrationSyntax(registration.ServiceType, registration.ImplementationTypeName, registration.Lifetime, registration.ServiceName));
+                bodyMembers.Add(RegistrationMapper.CreateRegistrationSyntax(registration.ServiceType, registration.ImplementationTypeName, registration.Lifetime, registration.ServiceName));
             }
 
             var decoration = DecorationMapper.CreateDecoration(classSymbol);
@@ -101,24 +88,9 @@ public class DependencyInjectionRegistrationGenerator : IIncrementalGenerator
                 bodyMembers.Add(CreateDecorationSyntax(decoration.DecoratedTypeName, decoration.DecoratorTypeName));
                 includeScrutor = true;
             }
-
-            // Collect RegisterAll attributes
-            registerAllAttributes.AddRange(classSymbol.GetAttributes().Where(attr => attr.AttributeClass?.Name == nameof(RegisterAllAttribute)));
         }
 
-        // Handle RegisterAll attributes
-        foreach (var attribute in registerAllAttributes)
-        {
-            var serviceType = attribute.ConstructorArguments[0].Value as INamedTypeSymbol;
-            if (serviceType is null)
-                continue;
-
-            var implementations = compilation.GetSymbolsWithName(symbol => symbol is INamedTypeSymbol typeSymbol && typeSymbol.AllInterfaces.Contains(serviceType));
-            foreach (var implementation in implementations.OfType<INamedTypeSymbol>())
-            {
-                bodyMembers.Add(CreateRegistrationSyntax(serviceType.ToDisplayString(), implementation.ToDisplayString(), ServiceLifetime.Transient, null));
-            }
-        }
+        RegisterAllHandler.Process(compilation, bodyMembers);
 
         var source = GenerateExtensionMethod(context, extensionName, @namespace, bodyMembers, includeScrutor);
         var sourceText = source.ToFullString();
@@ -236,50 +208,5 @@ public class DependencyInjectionRegistrationGenerator : IIncrementalGenerator
         return SyntaxFactory.ExpressionStatement(expression);
     }
 
-    private static ExpressionStatementSyntax CreateRegistrationSyntax(string? serviceType, string implementation, ServiceLifetime lifetime, string? serviceName)
-    {
-        var keyed = serviceName is null ? string.Empty : "Keyed";
-        var methodName = $"Add{keyed}{lifetime}";
-
-        SyntaxNodeOrToken[] tokens;
-        if (serviceType is null)
-        {
-            tokens = [SyntaxFactory.IdentifierName(implementation)];
-        }
-        else
-        {
-            tokens =
-            [
-                SyntaxFactory.IdentifierName(serviceType),
-                SyntaxFactory.Token(SyntaxKind.CommaToken),
-                SyntaxFactory.IdentifierName(implementation)
-            ];
-        }
-
-        var accessExpression = SyntaxFactory.MemberAccessExpression(
-              SyntaxKind.SimpleMemberAccessExpression,
-              SyntaxFactory.IdentifierName("services"),
-              SyntaxFactory.GenericName(
-                  SyntaxFactory.Identifier(methodName))
-              .WithTypeArgumentList(
-                  SyntaxFactory.TypeArgumentList(
-                      SyntaxFactory.SeparatedList<TypeSyntax>(tokens))));
-
-        var argumentList = SyntaxFactory.ArgumentList();
-        if (serviceName is not null)
-        {
-            argumentList = SyntaxFactory.ArgumentList(
-                            SyntaxFactory.SingletonSeparatedList<ArgumentSyntax>(
-                                SyntaxFactory.Argument(
-                                    SyntaxFactory.LiteralExpression(
-                                        SyntaxKind.StringLiteralExpression,
-                                        SyntaxFactory.Literal(serviceName)))));
-
-        }
-
-        var expression = SyntaxFactory.InvocationExpression(accessExpression)
-              .WithArgumentList(argumentList);
-
-        return SyntaxFactory.ExpressionStatement(expression);
-    }
+    
 }

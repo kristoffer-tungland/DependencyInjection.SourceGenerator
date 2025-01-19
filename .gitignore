@@ -42,7 +42,7 @@ bld/
 Generated\ Files/
 
 # MSTest test Results
-[Tt]est[Rr]esult*/
+[Tt]est[Rr]esult*(?!verified.txt)
 [Bb]uild[Ll]og.*
 
 # NUnit

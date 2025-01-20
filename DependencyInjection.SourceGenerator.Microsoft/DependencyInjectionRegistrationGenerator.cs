@@ -50,8 +50,7 @@ public class DependencyInjectionRegistrationGenerator : IIncrementalGenerator
 
         foreach (var attribute in classSymbol.GetAttributes())
         {
-            if (attribute.AttributeClass?.Name == nameof(RegisterAttribute)
-                || attribute.AttributeClass?.Name == nameof(DecorateAttribute))
+            if (attribute.AttributeClass?.Name is (nameof(RegisterAttribute)) or (nameof(DecorateAttribute)))
             {
                 return classSymbol;
             }
@@ -97,7 +96,7 @@ public class DependencyInjectionRegistrationGenerator : IIncrementalGenerator
 
         RegisterAllHandler.Process(compilation, bodyMembers);
 
-        var source = GenerateExtensionMethod(context, extensionName, @namespace, bodyMembers, includeScrutor);
+        var source = GenerateExtensionMethod(extensionName, @namespace, bodyMembers, includeScrutor);
         var sourceText = source.ToFullString();
         context.AddSource("ServiceRegistrations.g.cs", SourceText.From(sourceText, Encoding.UTF8));
     }
@@ -130,7 +129,7 @@ public class DependencyInjectionRegistrationGenerator : IIncrementalGenerator
         return sb.ToString();
     }
 
-    private static CompilationUnitSyntax GenerateExtensionMethod(SourceProductionContext context, string extensionName, string @namespace, List<ExpressionStatementSyntax> bodyMembers, bool includeScrutor)
+    private static CompilationUnitSyntax GenerateExtensionMethod(string extensionName, string @namespace, List<ExpressionStatementSyntax> bodyMembers, bool includeScrutor)
     {
         var methodModifiers = SyntaxFactory.TokenList(SyntaxFactory.Token(SyntaxKind.PublicKeyword), SyntaxFactory.Token(SyntaxKind.StaticKeyword));
 
@@ -163,7 +162,7 @@ public class DependencyInjectionRegistrationGenerator : IIncrementalGenerator
 
         methodDeclaration = methodDeclaration.WithBody(body);
 
-        var classModifiers = SyntaxFactory.TokenList(SyntaxFactory.Token(SyntaxKind.PublicKeyword), SyntaxFactory.Token(SyntaxKind.StaticKeyword));
+        var classModifiers = SyntaxFactory.TokenList(SyntaxFactory.Token(SyntaxKind.PublicKeyword), SyntaxFactory.Token(SyntaxKind.StaticKeyword), SyntaxFactory.Token(SyntaxKind.PartialKeyword));
         var classDeclaration = SyntaxFactory.ClassDeclaration("ServiceCollectionExtensions")
                     .WithModifiers(classModifiers)
                     .WithMembers(SyntaxFactory.SingletonList<MemberDeclarationSyntax>(methodDeclaration));
@@ -213,5 +212,5 @@ public class DependencyInjectionRegistrationGenerator : IIncrementalGenerator
         return SyntaxFactory.ExpressionStatement(expression);
     }
 
-    
+
 }

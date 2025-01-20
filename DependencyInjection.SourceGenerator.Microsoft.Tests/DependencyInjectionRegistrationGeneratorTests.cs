@@ -188,7 +188,7 @@ public class Service3 : IService {}
     }
 
     [Fact]
-    public async Task Register_NoInteface_Or_BaseClass()
+    public async Task Register_NoInterface_Or_BaseClass()
     {
         var code = """
     using global::Microsoft.Extensions.DependencyInjection;
@@ -414,17 +414,6 @@ public abstract class MyType : BaseType<string> { }
 public abstract class BaseType<TType> { }
 public class Service : MyType {}
 
-""";
-
-        var expected = """
-public static partial class ServiceCollectionExtensions
-{
-    public static global::Microsoft.Extensions.DependencyInjection.IServiceCollection AddTestProject(this global::Microsoft.Extensions.DependencyInjection.IServiceCollection services)
-    {
-        services.AddTransient<global::DependencyInjection.SourceGenerator.Microsoft.Demo.BaseType<string>, global::DependencyInjection.SourceGenerator.Microsoft.Demo.Service>();
-        return services;
-    }
-}
 """;
 
         await RunTestAsync(code);

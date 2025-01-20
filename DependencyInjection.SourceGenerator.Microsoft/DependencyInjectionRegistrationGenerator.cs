@@ -28,7 +28,6 @@ public class DependencyInjectionRegistrationGenerator : IIncrementalGenerator
         context.RegisterSourceOutput(compilationAndDeclarations, static (spc, source) => Execute(source.Left, source.Right, spc));
         context.RegisterPostInitializationOutput(static spc =>
         {
-            spc.AddSource("Microsoft.CodeAnalysis.EmbeddedAttribute", SourceText.From(AttributeSourceTexts.EmbeddedAttributeText, Encoding.UTF8));
             spc.AddSource("RegisterAttribute.g.cs", SourceText.From(AttributeSourceTexts.RegisterAttributeText, Encoding.UTF8));
             spc.AddSource("RegisterAllAttribute.g.cs", SourceText.From(AttributeSourceTexts.RegisterAllAttributeText, Encoding.UTF8));
             spc.AddSource("DecorateAttribute.g.cs", SourceText.From(AttributeSourceTexts.DecorateAttributeText, Encoding.UTF8));

@@ -115,14 +115,14 @@ internal static class RegistrationMapper
         SyntaxNodeOrToken[] tokens;
         if (serviceType is null)
         {
-            tokens = new SyntaxNodeOrToken[] { SyntaxFactory.IdentifierName($"global::System.Func<{implementation}>") };
+            tokens = [SyntaxFactory.IdentifierName($"global::System.Func<{implementation}>")];
         }
         else
         {
-            tokens = new SyntaxNodeOrToken[]
-            {
+            tokens =
+            [
                 SyntaxFactory.IdentifierName($"global::System.Func<{serviceType}>")
-            };
+            ];
         }
 
         var accessExpression = SyntaxFactory.MemberAccessExpression(

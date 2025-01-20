@@ -2,6 +2,17 @@ namespace DependencyInjection.SourceGenerator.Microsoft.Helpers;
 
 public static class AttributeSourceTexts
 {
+    public const string EmbeddedAttributeText =
+"""
+namespace Microsoft.CodeAnalysis
+{
+    [global::System.AttributeUsage(global::System.AttributeTargets.Class | global::System.AttributeTargets.Struct | global::System.AttributeTargets.Enum | global::System.AttributeTargets.Interface | global::System.AttributeTargets.Delegate)]
+    internal sealed class EmbeddedAttribute : global::System.Attribute
+    {
+    }
+}
+""";
+
     public static string CreateDefaultServiceRegistrationsClassText(string assemblyName) => 
     $$"""
 #nullable enable
@@ -28,7 +39,8 @@ namespace Microsoft.Extensions.DependencyInjection
 namespace Microsoft.Extensions.DependencyInjection
 {
     [global::System.AttributeUsage(global::System.AttributeTargets.Class, AllowMultiple = true)]
-    internal class RegisterAttribute : global::System.Attribute
+    [global::Microsoft.CodeAnalysis.Embedded]
+    internal sealed class RegisterAttribute : global::System.Attribute
     {
         public global::Microsoft.Extensions.DependencyInjection.ServiceLifetime Lifetime { get; set; } = global::Microsoft.Extensions.DependencyInjection.ServiceLifetime.Transient;
         public string? ServiceName { get; set; }
@@ -37,7 +49,8 @@ namespace Microsoft.Extensions.DependencyInjection
     }
 
     [global::System.AttributeUsage(global::System.AttributeTargets.Class, AllowMultiple = true)]
-    internal class RegisterAttribute<TServiceType> : global::System.Attribute
+    [global::Microsoft.CodeAnalysis.Embedded]
+    internal sealed class RegisterAttribute<TServiceType> : global::System.Attribute
     {
         public global::Microsoft.Extensions.DependencyInjection.ServiceLifetime Lifetime { get; set; } = global::Microsoft.Extensions.DependencyInjection.ServiceLifetime.Transient;
         public string? ServiceName { get; set; }
@@ -50,7 +63,8 @@ namespace Microsoft.Extensions.DependencyInjection
 namespace Microsoft.Extensions.DependencyInjection
 {
     [global::System.AttributeUsage(global::System.AttributeTargets.Assembly, AllowMultiple = true)]
-    internal class RegisterAllAttribute : global::System.Attribute
+    [global::Microsoft.CodeAnalysis.Embedded]
+    internal sealed class RegisterAllAttribute : global::System.Attribute
     {
         public global::Microsoft.Extensions.DependencyInjection.ServiceLifetime Lifetime { get; set; } = global::Microsoft.Extensions.DependencyInjection.ServiceLifetime.Transient;
         public global::System.Type ServiceType { get; set; }
@@ -69,7 +83,8 @@ namespace Microsoft.Extensions.DependencyInjection
     }
 
     [global::System.AttributeUsage(global::System.AttributeTargets.Assembly, AllowMultiple = true)]
-    internal class RegisterAllAttribute<TServiceType> : global::System.Attribute
+    [global::Microsoft.CodeAnalysis.Embedded]
+    internal sealed class RegisterAllAttribute<TServiceType> : global::System.Attribute
     {
         public global::Microsoft.Extensions.DependencyInjection.ServiceLifetime Lifetime { get; set; } = global::Microsoft.Extensions.DependencyInjection.ServiceLifetime.Transient;
         public bool IncludeServiceName { get; set; }
@@ -82,13 +97,15 @@ namespace Microsoft.Extensions.DependencyInjection
 namespace Microsoft.Extensions.DependencyInjection
 {
     [global::System.AttributeUsage(global::System.AttributeTargets.Class)]
-    internal class DecorateAttribute : global::System.Attribute
+    [global::Microsoft.CodeAnalysis.Embedded]
+    internal sealed class DecorateAttribute : global::System.Attribute
     {
         public global::System.Type? ServiceType { get; set; }
     }
 
     [global::System.AttributeUsage(global::System.AttributeTargets.Class)]
-    internal class DecorateAttribute<TServiceType> : global::System.Attribute
+    [global::Microsoft.CodeAnalysis.Embedded]
+    internal sealed class DecorateAttribute<TServiceType> : global::System.Attribute
     {
     }
 }";

@@ -16,6 +16,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DependencyInjection.SourceG
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{307324C8-0321-4E96-8C4B-5566A672364A}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DependencyInjection.SourceGenerator.Microsoft.Demo", "DependencyInjection.SourceGenerator.Microsoft.Demo\DependencyInjection.SourceGenerator.Microsoft.Demo.csproj", "{5F349F60-524E-49C2-BF0A-D50C2491AB49}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -30,12 +32,17 @@ Global
 		{E42AD1F2-3243-4E90-9C01-07E38577925E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E42AD1F2-3243-4E90-9C01-07E38577925E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E42AD1F2-3243-4E90-9C01-07E38577925E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5F349F60-524E-49C2-BF0A-D50C2491AB49}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5F349F60-524E-49C2-BF0A-D50C2491AB49}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5F349F60-524E-49C2-BF0A-D50C2491AB49}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5F349F60-524E-49C2-BF0A-D50C2491AB49}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{E42AD1F2-3243-4E90-9C01-07E38577925E} = {307324C8-0321-4E96-8C4B-5566A672364A}
+		{5F349F60-524E-49C2-BF0A-D50C2491AB49} = {307324C8-0321-4E96-8C4B-5566A672364A}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {6DC31EA4-A125-4CEA-9C7F-C266B28473ED}

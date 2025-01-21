@@ -53,9 +53,9 @@ internal static class RegistrationMapper
         return result;
     }
 
-    internal static List<MethodRegistration> CreateRegistrationFromMethod(IMethodSymbol methodSymbol)
+    internal static List<MethodFactoryRegistration> CreateRegistrationFromMethod(IMethodSymbol methodSymbol)
     {
-        var registrations = new List<MethodRegistration>();
+        var registrations = new List<MethodFactoryRegistration>();
 
         var attributes = TypeHelper.GetMethodAttributes<RegisterAttribute>(methodSymbol);
         foreach (var attribute in attributes)
@@ -65,7 +65,7 @@ internal static class RegistrationMapper
             var lifetime = TypeHelper.GetLifetimeFromAttribute(attribute) ?? ServiceLifetime.Transient;
             var serviceName = TypeHelper.GetAttributeValue(attribute, "ServiceName") as string;
 
-            registrations.Add(new MethodRegistration
+            registrations.Add(new MethodFactoryRegistration
             {
                 ServiceType = serviceType,
                 ServiceName = serviceName,
@@ -198,7 +198,7 @@ internal static class RegistrationMapper
         return $"global::{serviceType}";
     }
 
-    internal static ExpressionStatementSyntax CreateRegistrationSyntaxFromMethod(MethodRegistration registration)
+    internal static ExpressionStatementSyntax CreateRegistrationSyntaxFromFactoryMethod(MethodFactoryRegistration registration)
     {
         var keyed = registration.ServiceName is null ? string.Empty : "Keyed";
         var methodName = $"Add{keyed}{registration.Lifetime}";
@@ -222,5 +222,32 @@ internal static class RegistrationMapper
                                     SyntaxFactory.IdentifierName(registration.MethodClassName),
                                     SyntaxFactory.IdentifierName(registration.MethodName)))))))
             .NormalizeWhitespace();
+    }
+
+    internal static ExpressionStatementSyntax CreateRegistrationSyntaxFromCollectionMethod(MethodCollectionRegistration registration)
+    {
+        return SyntaxFactory.ExpressionStatement(
+            SyntaxFactory.InvocationExpression(
+                SyntaxFactory.MemberAccessExpression(
+                    SyntaxKind.SimpleMemberAccessExpression,
+                    SyntaxFactory.IdentifierName(registration.MethodClassName),
+                    SyntaxFactory.IdentifierName(registration.MethodName)))
+            .WithArgumentList(
+                SyntaxFactory.ArgumentList(
+                    SyntaxFactory.SingletonSeparatedList<ArgumentSyntax>(
+                        SyntaxFactory.Argument(
+                            SyntaxFactory.IdentifierName("services"))))))
+        .NormalizeWhitespace();
+    }
+
+    internal static MethodCollectionRegistration CreateCollectionRegistration(IMethodSymbol methodSymbol)
+    {
+        var registration = new MethodCollectionRegistration
+        {
+            MethodClassName = methodSymbol.ContainingType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
+            MethodName = methodSymbol.Name
+        };
+
+        return registration;
     }
 }

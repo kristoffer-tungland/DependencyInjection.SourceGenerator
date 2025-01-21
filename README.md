@@ -7,7 +7,7 @@ Add the "Register" attribute to the class you want to register. The attribute ta
 This library supports the following dependency injection frameworks, follow the links for more information on how to use them:
 - [Microsoft.Extensions.DependencyInjection](#microsoftextensionsdependencyinjection)
 
-To use this library you need to install the source generator package and the contacts package. 
+To use this library you need to install the source generator package and the contracts package. 
 The source generator package is a development dependency and will not be exposed as a dependency to consumers of your projects, while the contracts package contains the attributes and enums used to configure the generator.
 
 **Note:** The `DependencyInjection.SourceGenerator.Microsoft.Contracts` package has been deprecated. Please refer to the [Migration Guide](MigrationGuide.md) for more information.
@@ -275,3 +275,86 @@ public static class ServiceCollectionExtensions
 ```
 
 You can then inject `Func<IExampleService>` into your constructors as shown in the previous example.
+
+## Method Registrations
+You can also register services using static methods. The method must be static, public or internal, and have a single parameter of type `IServiceProvider` or `IServiceCollection`.
+
+### Example with IServiceProvider
+```csharp
+namespace RootNamespace.Services;
+
+public interface IExampleService
+{
+	string GetExample();
+}
+
+public class ExampleService : IExampleService
+{
+	public string GetExample()
+	{
+		return "Example";
+	}
+}
+
+public static class ServiceRegistrations
+{
+	[Register]
+	public static IExampleService RegisterExampleService(IServiceProvider services)
+	{
+		return new ExampleService();
+	}
+}
+```
+
+This will generate the following code:
+```csharp
+public static class ServiceCollectionExtensions
+{
+	public static global::Microsoft.Extensions.DependencyInjection.IServiceCollection AddMyProject(this global::Microsoft.Extensions.DependencyInjection.IServiceCollection services)
+	{
+		services.AddTransient<global::RootNamespace.Services.IExampleService>(global::RootNamespace.Services.ServiceRegistrations.RegisterExampleService);
+		return services;
+	}
+}
+```
+
+### Example with IServiceCollection
+```csharp
+namespace RootNamespace.Services;
+
+public interface IExampleService
+{
+	string GetExample();
+}
+
+public class ExampleService : IExampleService
+{
+	public string GetExample()
+	{
+		return "Example";
+	}
+}
+
+public static class ServiceRegistrations
+{
+	[Register]
+	public static void RegisterExampleService(IServiceCollection services)
+	{
+		services.AddTransient<IExampleService, ExampleService>();
+	}
+}
+```
+
+This will generate the following code:
+```csharp
+public static class ServiceCollectionExtensions
+{
+	public static global::Microsoft.Extensions.DependencyInjection.IServiceCollection AddMyProject(this global::Microsoft.Extensions.DependencyInjection.IServiceCollection services)
+	{
+		global::RootNamespace.Services.ServiceRegistrations.RegisterExampleService(services);
+		return services;
+	}
+}
+```
+
+You can then use it as shown in the previous examples.

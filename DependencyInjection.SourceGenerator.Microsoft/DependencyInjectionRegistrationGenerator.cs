@@ -8,6 +8,7 @@ using System.Collections.Immutable;
 using DependencyInjection.SourceGenerator.Microsoft.Enums;
 using Microsoft.Extensions.DependencyInjection;
 using CodeGenHelpers.Internals;
+using DependencyInjection.SourceGenerator.Microsoft.Diagnostics;
 
 namespace DependencyInjection.SourceGenerator.Microsoft;
 
@@ -60,19 +61,17 @@ public class DependencyInjectionRegistrationGenerator : IIncrementalGenerator
         {
             var semanticModel = context.SemanticModel;
             var methodSymbol = semanticModel.GetDeclaredSymbol(methodDeclaration) as IMethodSymbol;
-            if (methodSymbol != null &&
-                methodSymbol.ReturnsVoid == false &&
-                methodSymbol.Parameters.Length == 1 &&
-                methodSymbol.Parameters[0].Type.ToDisplayString() == "System.IServiceProvider")
+            if (methodSymbol is null)
+                return null;
+
+            foreach (var attribute in methodSymbol.GetAttributes())
             {
-                foreach (var attribute in methodSymbol.GetAttributes())
+                if (attribute.AttributeClass?.Name == nameof(RegisterAttribute))
                 {
-                    if (attribute.AttributeClass?.Name == nameof(RegisterAttribute))
-                    {
-                        return methodSymbol;
-                    }
+                    return methodSymbol;
                 }
             }
+
         }
 
         return null;
@@ -117,10 +116,10 @@ public class DependencyInjectionRegistrationGenerator : IIncrementalGenerator
         foreach (var registration in registrations)
         {
             var (registrationExpression, factoryExpression) = RegistrationMapper.CreateRegistrationSyntaxFromClass(
-                registration.ServiceType, 
-                registration.ImplementationTypeName, 
-                registration.Lifetime, 
-                registration.ServiceName, 
+                registration.ServiceType,
+                registration.ImplementationTypeName,
+                registration.Lifetime,
+                registration.ServiceName,
                 registration.IncludeFactory);
             bodyMembers.Add(registrationExpression);
             if (factoryExpression is not null)
@@ -145,26 +144,54 @@ public class DependencyInjectionRegistrationGenerator : IIncrementalGenerator
         // Ensure the method is static
         if (!methodSymbol.IsStatic)
         {
-            context.ReportDiagnostic(Diagnostic.Create(new DiagnosticDescriptor(
-                "DI001",
-                "Method Registration",
-                "Register method '{0}' must be static",
-                "DependencyInjection",
-                DiagnosticSeverity.Error,
-                isEnabledByDefault: true),
-                Location.None,
-                methodSymbol.Name));
+            MethodRegistrationDiagnostics.ReportMustBeStatic(methodSymbol, context);
             return;
         }
 
-        // Handle method registration
-        var registrations = RegistrationMapper.CreateRegistrationFromMethod(methodSymbol);
-        foreach (var registration in registrations)
+        // Ensure the method is public or internal
+        if (methodSymbol.DeclaredAccessibility is not Accessibility.Public and not Accessibility.Internal)
         {
-            // Create the registration expression using type symbols
-            var registrationExpression = RegistrationMapper.CreateRegistrationSyntaxFromMethod(registration);
-            bodyMembers.Add(registrationExpression);
+            MethodRegistrationDiagnostics.ReportMustBePublicOrInternal(methodSymbol, context);
+            return;
         }
+
+        // Ensure the method has exactly one parameter of type System.IServiceProvider
+        if (methodSymbol.Parameters.Length != 1)
+        {
+            MethodRegistrationDiagnostics.ReportInvalidParameters(methodSymbol, context);
+            return;
+        }
+
+        var methodParameter = methodSymbol.Parameters[0].Type.ToDisplayString();
+        if (methodParameter == "System.IServiceProvider")
+        {
+            // Ensure the method does not return void
+            if (methodSymbol.ReturnsVoid)
+            {
+                MethodRegistrationDiagnostics.ReportCannotReturnVoid(methodSymbol, context);
+                return;
+            }
+            // Handle method registration
+            var registrations = RegistrationMapper.CreateRegistrationFromMethod(methodSymbol);
+            foreach (var registration in registrations)
+            {
+                // Create the registration expression using type symbols
+                var registrationExpression = RegistrationMapper.CreateRegistrationSyntaxFromFactoryMethod(registration);
+                bodyMembers.Add(registrationExpression);
+            }
+        }
+        else if (methodParameter == "Microsoft.Extensions.DependencyInjection.IServiceCollection")
+        {
+            var registration = RegistrationMapper.CreateCollectionRegistration(methodSymbol);
+            var extensionMethodRegistration = RegistrationMapper.CreateRegistrationSyntaxFromCollectionMethod(registration);
+            bodyMembers.Add(extensionMethodRegistration);
+        }
+        else
+        {
+            MethodRegistrationDiagnostics.ReportInvalidMethodParameter(methodSymbol, context);
+        }
+
+
     }
 
     public static string EscapeAssemblyNameToMethodName(string? assemblyName)

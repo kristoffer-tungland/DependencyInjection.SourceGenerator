@@ -127,6 +127,26 @@ public interface IService {}
     }
 
     [Fact]
+    public async Task Register_WithCollection()
+    {
+        var code = """
+using global::Microsoft.Extensions.DependencyInjection;
+
+namespace DependencyInjection.SourceGenerator.Microsoft.Demo;
+
+public class Test 
+{
+    [Register]
+    public static void RegisterMethod(IServiceCollection services)
+    {
+    }
+}
+""";
+
+        await RunTestAsync(code);
+    }
+
+    [Fact]
     public async Task Register_MultipleServices()
     {
         var code = """

@@ -11,11 +11,17 @@ internal sealed class ClassRegistration
     public required string ImplementationTypeName { get; init; }
 }
 
-internal sealed class MethodRegistration
+internal sealed class MethodFactoryRegistration
 {
     public required string ServiceType { get; init; }
     public required string? ServiceName { get; init; }
     public required ServiceLifetime Lifetime { get; init; }
+    public required string MethodClassName { get; init; }
+    public required string MethodName { get; init; }
+}
+
+internal sealed class MethodCollectionRegistration
+{
     public required string MethodClassName { get; init; }
     public required string MethodName { get; init; }
 }

@@ -93,6 +93,22 @@ public interface IService {}
         await RunTestAsync(code);
     }
 
+
+    [Fact]
+    public async Task Register_Record()
+    {
+        var code = """
+using global::Microsoft.Extensions.DependencyInjection;
+
+namespace DependencyInjection.SourceGenerator.Microsoft.Demo;
+
+[Register]
+public sealed record Service;
+""";
+
+        await RunTestAsync(code);
+    }
+
     [Fact]
     public async Task Register_WithFactory()
     {

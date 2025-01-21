@@ -36,16 +36,16 @@ public class DependencyInjectionRegistrationGenerator : IIncrementalGenerator
 
     private static bool IsClassOrMethodWithAttributes(SyntaxNode node)
     {
-        return node is ClassDeclarationSyntax classDeclaration && classDeclaration.AttributeLists.Count > 0
+        return node is TypeDeclarationSyntax typeDeclaration && typeDeclaration.AttributeLists.Count > 0
             || node is MethodDeclarationSyntax methodDeclaration && methodDeclaration.AttributeLists.Count > 0;
     }
 
     private static ISymbol? GetSymbolToRegister(GeneratorSyntaxContext context)
     {
-        if (context.Node is ClassDeclarationSyntax classDeclaration)
+        if (context.Node is TypeDeclarationSyntax typeDeclaration)
         {
             var semanticModel = context.SemanticModel;
-            if (semanticModel.GetDeclaredSymbol(classDeclaration) is not INamedTypeSymbol classSymbol)
+            if (semanticModel.GetDeclaredSymbol(typeDeclaration) is not INamedTypeSymbol classSymbol)
                 return null;
 
             foreach (var attribute in classSymbol.GetAttributes())

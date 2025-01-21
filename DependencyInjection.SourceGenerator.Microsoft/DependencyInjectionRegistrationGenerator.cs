@@ -36,12 +36,12 @@ public class DependencyInjectionRegistrationGenerator : IIncrementalGenerator
 
     private static bool IsClassWithAttributes(SyntaxNode node)
     {
-        return node is ClassDeclarationSyntax classDeclaration && classDeclaration.AttributeLists.Count > 0;
+        return node is TypeDeclarationSyntax classDeclaration && classDeclaration.AttributeLists.Count > 0;
     }
 
     private static INamedTypeSymbol? GetClassToRegister(GeneratorSyntaxContext context)
     {
-        if (context.Node is not ClassDeclarationSyntax classDeclaration)
+        if (context.Node is not TypeDeclarationSyntax classDeclaration)
             return null;
 
         var semanticModel = context.SemanticModel;

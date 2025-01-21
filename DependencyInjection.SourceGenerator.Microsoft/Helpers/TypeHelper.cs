@@ -14,6 +14,12 @@ internal static class TypeHelper
         return GetAttributes<TAttribute>(attributes);
     }
 
+    internal static List<AttributeData> GetMethodAttributes<TAttribute>(IMethodSymbol methodSymbol) where TAttribute : Attribute
+    {
+        var attributes = methodSymbol.GetAttributes();
+        return GetAttributes<TAttribute>(attributes);
+    }
+
     internal static List<AttributeData> GetAttributes<TAttribute>(ImmutableArray<AttributeData> attributes) where TAttribute : Attribute
     {
         var result = new List<AttributeData>();
@@ -51,6 +57,16 @@ internal static class TypeHelper
             return argumentServiceType;
 
         return default;
+    }
+
+    internal static INamedTypeSymbol? GetServiceTypeFromMethod(IMethodSymbol methodSymbol, AttributeData attribute)
+    {
+        var serviceTypeArgument = attribute.NamedArguments.FirstOrDefault(arg => arg.Key == "ServiceType");
+        if (!serviceTypeArgument.Value.IsNull)
+            return serviceTypeArgument.Value.Value as INamedTypeSymbol;
+
+        // If ServiceType is not specified, infer from method's return type
+        return methodSymbol.ReturnType as INamedTypeSymbol;
     }
 
     internal static ServiceLifetime? GetLifetimeFromAttribute(AttributeData attribute)
@@ -147,6 +163,11 @@ internal static class TypeHelper
     internal static object? GetConstructorArgumentValue<TType>(AttributeData attribute)
     {
         return attribute.ConstructorArguments.FirstOrDefault(x => x.Type?.Name == typeof(TType).Name).Value;
+    }
+
+    internal static string GetReturnTypeFullName(IMethodSymbol methodSymbol)
+    {
+        return GetFullName(methodSymbol.ReturnType);
     }
 }
 

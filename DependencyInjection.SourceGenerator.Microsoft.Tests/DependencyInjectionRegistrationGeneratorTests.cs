@@ -418,4 +418,29 @@ public class Service : MyType {}
 
         await RunTestAsync(code);
     }
+
+    [Fact]
+    public async Task RegisterMethod_DefaultValues()
+    {
+        var code =
+"""
+using global::Microsoft.Extensions.DependencyInjection;
+
+namespace DependencyInjection.SourceGenerator.Microsoft.Demo;
+
+public class Test 
+{
+    [Register]
+    public static IService RegisterMethod(System.IServiceProvider services)
+    {
+        return new Service();
+    }
+}
+public class Service : IService {}
+public interface IService {}
+
+""";
+
+        await RunTestAsync(code);
+    }
 }

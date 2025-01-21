@@ -7,14 +7,14 @@ using Microsoft.Extensions.DependencyInjection;
 namespace DependencyInjection.SourceGenerator.Microsoft.Helpers;
 internal static class RegistrationMapper
 {
-    internal static List<Registration> CreateRegistration(INamedTypeSymbol type)
+    internal static List<ClassRegistration> CreateRegistration(INamedTypeSymbol type)
     {
         var attributes = TypeHelper.GetClassAttributes<RegisterAttribute>(type);
 
         if (!attributes.Any())
             return [];
 
-        var result = new List<Registration>();
+        var result = new List<ClassRegistration>();
         foreach (var attribute in attributes)
         {
 
@@ -39,7 +39,7 @@ internal static class RegistrationMapper
                 serviceType = null;
             }
 
-            var registration = new Registration
+            var registration = new ClassRegistration
             {
                 ImplementationTypeName = implementationTypeName,
                 Lifetime = lifetime,
@@ -53,7 +53,32 @@ internal static class RegistrationMapper
         return result;
     }
 
-    public static (ExpressionStatementSyntax registrationExpression, ExpressionStatementSyntax? factoryExpression) CreateRegistrationSyntax(string? serviceType, string implementation, ServiceLifetime lifetime, string? serviceName, bool includeFactory)
+    internal static List<MethodRegistration> CreateRegistrationFromMethod(IMethodSymbol methodSymbol)
+    {
+        var registrations = new List<MethodRegistration>();
+
+        var attributes = TypeHelper.GetMethodAttributes<RegisterAttribute>(methodSymbol);
+        foreach (var attribute in attributes)
+        {
+            var serviceTypeSymbol = TypeHelper.GetServiceTypeFromMethod(methodSymbol, attribute);
+            var serviceType = serviceTypeSymbol?.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat) ?? methodSymbol.ReturnType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+            var lifetime = TypeHelper.GetLifetimeFromAttribute(attribute) ?? ServiceLifetime.Transient;
+            var serviceName = TypeHelper.GetAttributeValue(attribute, "ServiceName") as string;
+
+            registrations.Add(new MethodRegistration
+            {
+                ServiceType = serviceType,
+                ServiceName = serviceName,
+                Lifetime = lifetime,
+                MethodClassName = methodSymbol.ContainingType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
+                MethodName = methodSymbol.Name
+            });
+        }
+
+        return registrations;
+    }
+
+    public static (ExpressionStatementSyntax registrationExpression, ExpressionStatementSyntax? factoryExpression) CreateRegistrationSyntaxFromClass(string? serviceType, string implementation, ServiceLifetime lifetime, string? serviceName, bool includeFactory)
     {
         if (serviceType is not null)
         {
@@ -171,5 +196,31 @@ internal static class RegistrationMapper
             return serviceType;
         }
         return $"global::{serviceType}";
+    }
+
+    internal static ExpressionStatementSyntax CreateRegistrationSyntaxFromMethod(MethodRegistration registration)
+    {
+        var keyed = registration.ServiceName is null ? string.Empty : "Keyed";
+        var methodName = $"Add{keyed}{registration.Lifetime}";
+        return SyntaxFactory.ExpressionStatement(
+                SyntaxFactory.InvocationExpression(
+                    SyntaxFactory.MemberAccessExpression(
+                        SyntaxKind.SimpleMemberAccessExpression,
+                        SyntaxFactory.IdentifierName("services"),
+                        SyntaxFactory.GenericName(
+                            SyntaxFactory.Identifier(methodName))
+                        .WithTypeArgumentList(
+                            SyntaxFactory.TypeArgumentList(
+                                SyntaxFactory.SingletonSeparatedList<TypeSyntax>(
+                                    SyntaxFactory.IdentifierName(registration.ServiceType))))))
+                .WithArgumentList(
+                    SyntaxFactory.ArgumentList(
+                        SyntaxFactory.SingletonSeparatedList<ArgumentSyntax>(
+                            SyntaxFactory.Argument(
+                                SyntaxFactory.MemberAccessExpression(
+                                    SyntaxKind.SimpleMemberAccessExpression,
+                                    SyntaxFactory.IdentifierName(registration.MethodClassName),
+                                    SyntaxFactory.IdentifierName(registration.MethodName)))))))
+            .NormalizeWhitespace();
     }
 }

@@ -2,7 +2,7 @@
 
 namespace Microsoft.Extensions.DependencyInjection;
 
-[AttributeUsage(AttributeTargets.Class, AllowMultiple = true)]
+[AttributeUsage(AttributeTargets.Class | AttributeTargets.Method, AllowMultiple = true)]
 internal class RegisterAttribute : Attribute
 {
     public ServiceLifetime Lifetime { get; set; } = ServiceLifetime.Transient;

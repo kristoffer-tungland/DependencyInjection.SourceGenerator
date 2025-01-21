@@ -28,7 +28,7 @@ public static class RegisterAllHandler
             foreach (var (implementationType, actualServiceType) in implementations)
             {
                 var serviceName = includeServiceName ? implementationType.Name : null;
-                var (registration, factory) = RegistrationMapper.CreateRegistrationSyntax(actualServiceType.ToDisplayString(), implementationType.ToDisplayString(), lifetime, serviceName, includeFactory);
+                var (registration, factory) = RegistrationMapper.CreateRegistrationSyntaxFromClass(actualServiceType.ToDisplayString(), implementationType.ToDisplayString(), lifetime, serviceName, includeFactory);
                 bodyMembers.Add(registration);
                 if (factory is not null)
                     bodyMembers.Add(factory);

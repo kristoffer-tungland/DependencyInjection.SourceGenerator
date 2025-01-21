@@ -27,7 +27,7 @@ namespace Microsoft.Extensions.DependencyInjection
 #nullable enable
 namespace Microsoft.Extensions.DependencyInjection
 {
-    [global::System.AttributeUsage(global::System.AttributeTargets.Class, AllowMultiple = true)]
+    [global::System.AttributeUsage(global::System.AttributeTargets.Class | global::System.AttributeTargets.Method, AllowMultiple = true)]
     internal sealed class RegisterAttribute : global::System.Attribute
     {
         public global::Microsoft.Extensions.DependencyInjection.ServiceLifetime Lifetime { get; set; } = global::Microsoft.Extensions.DependencyInjection.ServiceLifetime.Transient;
@@ -36,7 +36,7 @@ namespace Microsoft.Extensions.DependencyInjection
         public global::System.Type? ServiceType { get; set; }
     }
 
-    [global::System.AttributeUsage(global::System.AttributeTargets.Class, AllowMultiple = true)]
+    [global::System.AttributeUsage(global::System.AttributeTargets.Class | global::System.AttributeTargets.Method, AllowMultiple = true)]
     internal sealed class RegisterAttribute<TServiceType> : global::System.Attribute
     {
         public global::Microsoft.Extensions.DependencyInjection.ServiceLifetime Lifetime { get; set; } = global::Microsoft.Extensions.DependencyInjection.ServiceLifetime.Transient;

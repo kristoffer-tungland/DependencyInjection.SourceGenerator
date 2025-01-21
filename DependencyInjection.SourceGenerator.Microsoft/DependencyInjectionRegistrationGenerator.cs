@@ -20,8 +20,8 @@ public class DependencyInjectionRegistrationGenerator : IIncrementalGenerator
     {
         var declarations = context.SyntaxProvider
             .CreateSyntaxProvider(
-                predicate: static (s, _) => IsClassWithAttributes(s),
-                transform: static (ctx, _) => GetClassToRegister(ctx))
+                predicate: static (s, _) => IsClassOrMethodWithAttributes(s),
+                transform: static (ctx, _) => GetSymbolToRegister(ctx))
             .Where(static m => m is not null);
 
         var compilationAndDeclarations = context.CompilationProvider.Combine(declarations.Collect());
@@ -34,33 +34,51 @@ public class DependencyInjectionRegistrationGenerator : IIncrementalGenerator
         });
     }
 
-    private static bool IsClassWithAttributes(SyntaxNode node)
+    private static bool IsClassOrMethodWithAttributes(SyntaxNode node)
     {
-        return node is ClassDeclarationSyntax classDeclaration && classDeclaration.AttributeLists.Count > 0;
+        return node is ClassDeclarationSyntax classDeclaration && classDeclaration.AttributeLists.Count > 0
+            || node is MethodDeclarationSyntax methodDeclaration && methodDeclaration.AttributeLists.Count > 0;
     }
 
-    private static INamedTypeSymbol? GetClassToRegister(GeneratorSyntaxContext context)
+    private static ISymbol? GetSymbolToRegister(GeneratorSyntaxContext context)
     {
-        if (context.Node is not ClassDeclarationSyntax classDeclaration)
-            return null;
-
-        var semanticModel = context.SemanticModel;
-        if (semanticModel.GetDeclaredSymbol(classDeclaration) is not INamedTypeSymbol classSymbol)
-            return null;
-
-        foreach (var attribute in classSymbol.GetAttributes())
+        if (context.Node is ClassDeclarationSyntax classDeclaration)
         {
-            if (attribute.AttributeClass?.Name is (nameof(RegisterAttribute)) or (nameof(DecorateAttribute)))
+            var semanticModel = context.SemanticModel;
+            if (semanticModel.GetDeclaredSymbol(classDeclaration) is not INamedTypeSymbol classSymbol)
+                return null;
+
+            foreach (var attribute in classSymbol.GetAttributes())
             {
-                return classSymbol;
+                if (attribute.AttributeClass?.Name is (nameof(RegisterAttribute)) or (nameof(DecorateAttribute)))
+                {
+                    return classSymbol;
+                }
             }
         }
-
+        else if (context.Node is MethodDeclarationSyntax methodDeclaration)
+        {
+            var semanticModel = context.SemanticModel;
+            var methodSymbol = semanticModel.GetDeclaredSymbol(methodDeclaration) as IMethodSymbol;
+            if (methodSymbol != null &&
+                methodSymbol.ReturnsVoid == false &&
+                methodSymbol.Parameters.Length == 1 &&
+                methodSymbol.Parameters[0].Type.ToDisplayString() == "System.IServiceProvider")
+            {
+                foreach (var attribute in methodSymbol.GetAttributes())
+                {
+                    if (attribute.AttributeClass?.Name == nameof(RegisterAttribute))
+                    {
+                        return methodSymbol;
+                    }
+                }
+            }
+        }
 
         return null;
     }
 
-    private static void Execute(Compilation compilation, ImmutableArray<INamedTypeSymbol?> classesToRegister, SourceProductionContext context)
+    private static void Execute(Compilation compilation, ImmutableArray<ISymbol?> symbolsToRegister, SourceProductionContext context)
     {
         var @namespace = "Microsoft.Extensions.DependencyInjection";
         var safeAssemblyName = EscapeAssemblyNameToMethodName(compilation.AssemblyName);
@@ -70,27 +88,19 @@ public class DependencyInjectionRegistrationGenerator : IIncrementalGenerator
 
         var includeScrutor = false;
 
-        foreach (var classSymbol in classesToRegister)
+        foreach (var symbol in symbolsToRegister)
         {
-            if (classSymbol is null)
-                continue;
-
-            var registrations = RegistrationMapper.CreateRegistration(classSymbol);
-            foreach (var registration in registrations)
+            if (symbol is INamedTypeSymbol classSymbol)
             {
-                var (registrationExpression, factoryExpression) = RegistrationMapper.CreateRegistrationSyntax(registration.ServiceType, registration.ImplementationTypeName, registration.Lifetime, registration.ServiceName, registration.IncludeFactory);
-                bodyMembers.Add(registrationExpression);
-                if (factoryExpression is not null)
+                var hasDecorators = ProcessClassSymbol(classSymbol, bodyMembers);
+                if (hasDecorators)
                 {
-                    bodyMembers.Add(factoryExpression);
+                    includeScrutor = true;
                 }
             }
-
-            var decoration = DecorationMapper.CreateDecoration(classSymbol);
-            if (decoration is not null)
+            else if (symbol is IMethodSymbol methodSymbol)
             {
-                bodyMembers.Add(CreateDecorationSyntax(decoration.DecoratedTypeName, decoration.DecoratorTypeName));
-                includeScrutor = true;
+                ProcessMethodSymbol(methodSymbol, bodyMembers, context);
             }
         }
 
@@ -99,6 +109,62 @@ public class DependencyInjectionRegistrationGenerator : IIncrementalGenerator
         var source = GenerateExtensionMethod(extensionName, @namespace, bodyMembers, includeScrutor);
         var sourceText = source.ToFullString();
         context.AddSource("ServiceRegistrations.g.cs", SourceText.From(sourceText, Encoding.UTF8));
+    }
+
+    private static bool ProcessClassSymbol(INamedTypeSymbol classSymbol, List<ExpressionStatementSyntax> bodyMembers)
+    {
+        var registrations = RegistrationMapper.CreateRegistration(classSymbol);
+        foreach (var registration in registrations)
+        {
+            var (registrationExpression, factoryExpression) = RegistrationMapper.CreateRegistrationSyntaxFromClass(
+                registration.ServiceType, 
+                registration.ImplementationTypeName, 
+                registration.Lifetime, 
+                registration.ServiceName, 
+                registration.IncludeFactory);
+            bodyMembers.Add(registrationExpression);
+            if (factoryExpression is not null)
+            {
+                bodyMembers.Add(factoryExpression);
+            }
+        }
+
+        var decorations = DecorationMapper.CreateDecoration(classSymbol);
+        var hasDecorators = false;
+        foreach (var decoration in decorations)
+        {
+            bodyMembers.Add(CreateDecorationSyntax(decoration.DecoratedTypeName, decoration.DecoratorTypeName));
+            hasDecorators = true;
+        }
+
+        return hasDecorators;
+    }
+
+    private static void ProcessMethodSymbol(IMethodSymbol methodSymbol, List<ExpressionStatementSyntax> bodyMembers, SourceProductionContext context)
+    {
+        // Ensure the method is static
+        if (!methodSymbol.IsStatic)
+        {
+            context.ReportDiagnostic(Diagnostic.Create(new DiagnosticDescriptor(
+                "DI001",
+                "Method Registration",
+                "Register method '{0}' must be static",
+                "DependencyInjection",
+                DiagnosticSeverity.Error,
+                isEnabledByDefault: true),
+                Location.None,
+                methodSymbol.Name));
+            return;
+        }
+
+        // Handle method registration
+        var registrations = RegistrationMapper.CreateRegistrationFromMethod(methodSymbol);
+        foreach (var registration in registrations)
+        {
+            // Create the registration expression using type symbols
+            var registrationExpression = RegistrationMapper.CreateRegistrationSyntaxFromMethod(registration);
+            bodyMembers.Add(registrationExpression);
+        }
     }
 
     public static string EscapeAssemblyNameToMethodName(string? assemblyName)

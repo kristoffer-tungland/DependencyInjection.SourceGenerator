@@ -25,6 +25,12 @@
 		<DevelopmentDependency>true</DevelopmentDependency>
 	</PropertyGroup>
 
+	
+	<ItemGroup>
+		<None Include="..\LICENSE" Pack="true" PackagePath="\" />
+		<None Include="..\README.md" Pack="true" PackagePath="\" />
+	</ItemGroup>
+	
 	<ItemGroup>
 		<!-- Package the generator in the analyzer directory of the nuget package -->
 		<None Include="$(OutputPath)\$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />

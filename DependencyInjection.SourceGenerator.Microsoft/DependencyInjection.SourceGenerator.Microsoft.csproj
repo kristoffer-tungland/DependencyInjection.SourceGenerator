@@ -13,7 +13,7 @@
 		<LangVersion>12</LangVersion>
 		<EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
 		<PackageLicenseFile>LICENSE</PackageLicenseFile>
-		<Version>3.0.0-alpha10</Version>
+		<Version>3.0.0-alpha11</Version>
 	</PropertyGroup>
 
 	<PropertyGroup>
@@ -35,7 +35,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.11.0"
+		<PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.10.0"
 			PrivateAssets="all" />
 		<PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.11.0">
 			<PrivateAssets>all</PrivateAssets>

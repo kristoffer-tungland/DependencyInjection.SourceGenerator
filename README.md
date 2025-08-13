@@ -1,6 +1,8 @@
 # DependencyInjection.SourceGenerator.Microsoft
 Register services using attributes instead of registering in code.
 
+This library simplifies dependency injection in .NET applications by moving service registration from startup code to the service classes themselves using attributes. This approach provides compile-time validation, reduces boilerplate code, and keeps service registration logic next to the implementation where it belongs. With features like automatic registration of interface implementations, decorator pattern support, and factory registration, it helps maintain clean and maintainable dependency injection configuration, especially in larger applications.
+
 ## Usage
 Add the "Register" attribute to the class you want to register. The attribute takes a type and a lifetime. The type is the type you want to register and the lifetime is the lifetime of the service. The lifetime is optional and defaults to Transient.
 
@@ -101,7 +103,7 @@ public static class ServiceCollectionExtensions
 }
 ```
 
-This can then be used like this: 
+You can then use the generated extension method as follows:
 ```csharp
 var services = new ServiceCollection();
 services.AddMyProject();
@@ -123,7 +125,7 @@ builder.Services.AddMyProject();
 ```
 
 ### Register all services in the project
-You can also register all services in an project by adding the RegisterAll attribute to the assembly. This will register all implementations of the specified type.
+You can also register all services in a project by adding the RegisterAll attribute to the assembly. This will register all implementations of the specified interface or base type.
 
 ```csharp
 using DependencyInjection.SourceGenerator.Contracts.Attributes;
@@ -169,13 +171,13 @@ public static class ServiceCollectionExtensions
 ```
 
 ## Lifetime
-The lifetime is an enum with the following values:
+The `Lifetime` is an enum with the following values:
 - Transient
 - Scoped
 - Singleton
 
 ## IncludeFactory
-The `IncludeFactory` property allows you to register a service as a `Func<TService>`, enabling you to inject a factory method into your constructors. This is useful when you need to create multiple instances of a service.
+The `IncludeFactory` property allows you to register a service as a `Func<TService>`, enabling you to inject a factory method into your constructors. This is useful when you need to create multiple instances of a service on demand.
 
 ### Example
 ```csharp
@@ -277,7 +279,7 @@ public static class ServiceCollectionExtensions
 You can then inject `Func<IExampleService>` into your constructors as shown in the previous example.
 
 ## Method Registrations
-You can also register services using static methods. The method must be static, public or internal, and have a single parameter of type `IServiceProvider` or `IServiceCollection`.
+You can also register services using static methods. The method must be static, public or internal, and must have a single parameter of type `IServiceProvider` or `IServiceCollection`.
 
 ### Example with IServiceProvider
 ```csharp
@@ -357,4 +359,4 @@ public static class ServiceCollectionExtensions
 }
 ```
 
-You can then use it as shown in the previous examples.
+You can then use the generated extension method as shown in the previous examples.

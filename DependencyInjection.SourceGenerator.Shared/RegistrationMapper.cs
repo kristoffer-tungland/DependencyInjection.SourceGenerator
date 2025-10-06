@@ -43,7 +43,9 @@ internal static class RegistrationMapper
                 ImplementationTypeName = implementationTypeName,
                 Lifetime = lifetime,
                 ServiceName = serviceName,
-                ServiceType = serviceType?.Name
+                ServiceType = serviceType?.Name,
+                ImplementationType = type,
+                ServiceTypeMetadata = serviceType
             };
             result.Add(registration);
         }

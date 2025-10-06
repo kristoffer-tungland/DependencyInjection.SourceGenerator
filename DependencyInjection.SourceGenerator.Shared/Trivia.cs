@@ -4,6 +4,7 @@ using Microsoft.CodeAnalysis;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Linq;
 
 namespace DependencyInjection.SourceGenerator.Shared;
 internal static class Trivia
@@ -45,9 +46,16 @@ internal static class Trivia
     }
 
     internal static CompilationUnitSyntax CreateCompilationUnitSyntax(ClassDeclarationSyntax classDeclaration, string @namespace, UsingDirectiveSyntax[]? usings = null)
+        => CreateCompilationUnitSyntax(new MemberDeclarationSyntax[] { classDeclaration }, @namespace, usings);
+
+    internal static CompilationUnitSyntax CreateCompilationUnitSyntax(IEnumerable<MemberDeclarationSyntax> members, string @namespace, UsingDirectiveSyntax[]? usings = null)
     {
         var excludeFromCodeCoverageSyntax = CreateExcludeFromCodeCoverage();
-        classDeclaration = classDeclaration.AddAttributeLists(excludeFromCodeCoverageSyntax);
+        var processedMembers = members
+            .Select(member => member is TypeDeclarationSyntax typeDeclaration
+                ? typeDeclaration.AddAttributeLists(excludeFromCodeCoverageSyntax)
+                : member)
+            .ToArray();
 
         var trivia = Trivia.CreateTrivia();
         var namespaceDeclaration = SyntaxFactory.FileScopedNamespaceDeclaration(SyntaxFactory.IdentifierName(@namespace))
@@ -56,7 +64,7 @@ internal static class Trivia
         if (usings is not null)
             namespaceDeclaration = namespaceDeclaration.AddUsings(usings);
 
-        namespaceDeclaration = namespaceDeclaration.AddMembers(classDeclaration);
+        namespaceDeclaration = namespaceDeclaration.AddMembers(processedMembers);
 
         return SyntaxFactory.CompilationUnit()
             .AddMembers(namespaceDeclaration)

@@ -74,12 +74,15 @@ internal static class RegistrationCollector
 
         if (serviceType.TypeKind == TypeKind.Class && GetBaseTypeImplementation(type, serviceType) is { } baseTypeImplementation)
         {
+            var serviceTypeName = TypeHelper.GetFullName(baseTypeImplementation, type.ContainingNamespace);
             return new Registration
             {
                 ImplementationTypeName = TypeHelper.GetFullName(type),
                 Lifetime = lifetime,
                 ServiceName = includeServiceNameValue ? type.Name : null,
-                ServiceType = TypeHelper.GetFullName(baseTypeImplementation, type.ContainingNamespace)
+                ServiceType = serviceTypeName,
+                ImplementationType = type,
+                ServiceTypeMetadata = new ServiceType(baseTypeImplementation, serviceTypeName)
             };
         }
         return null;
@@ -101,7 +104,9 @@ internal static class RegistrationCollector
                         ImplementationTypeName = typeName,
                         Lifetime = lifetime,
                         ServiceName = includeServiceNameValue ? type.Name : null,
-                        ServiceType = implInterfaceName
+                        ServiceType = implInterfaceName,
+                        ImplementationType = type,
+                        ServiceTypeMetadata = new ServiceType(implInterface, implInterfaceName)
                     };
                 }
             }
@@ -112,7 +117,9 @@ internal static class RegistrationCollector
                     ImplementationTypeName = typeName,
                     Lifetime = lifetime,
                     ServiceName = includeServiceNameValue ? type.Name : null,
-                    ServiceType = serviceTypeName
+                    ServiceType = serviceTypeName,
+                    ImplementationType = type,
+                    ServiceTypeMetadata = new ServiceType(implInterface, serviceTypeName)
                 };
             }
         }

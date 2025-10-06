@@ -1,13 +1,21 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-	<Import Project="..\common.targets" />
-
 	<PropertyGroup>
+		<OutputType>library</OutputType>
 		<TargetFramework>netstandard2.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<WarningsAsErrors>Nullable</WarningsAsErrors>
 		<EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
-		<PackageReadmeFile>readme.md</PackageReadmeFile>
+		<PackageReadmeFile>README.md</PackageReadmeFile>
+		<Authors>Frederik Tegnander</Authors>
+		<RepositoryUrl>https://github.com/Frederik91/DependencyInjection.SourceGenerator</RepositoryUrl>
+		<LangVersion>12</LangVersion>
+		<EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
+		<PackageLicenseFile>LICENSE</PackageLicenseFile>
+		<Version>3.0.0</Version>
 	</PropertyGroup>
-	
+
 	<PropertyGroup>
 		<PackageTags>SourceGenerator;Microsoft</PackageTags>
 		<PackageDescription>Generates dependency injection registration using source generation</PackageDescription>
@@ -17,26 +25,36 @@
 		<DevelopmentDependency>true</DevelopmentDependency>
 	</PropertyGroup>
 
+	
 	<ItemGroup>
-		<PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.8.0" PrivateAssets="all" />
-		<PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.3.4">
+		<None Include="..\LICENSE" Pack="true" PackagePath="\" />
+		<None Include="..\README.md" Pack="true" PackagePath="\" />
+	</ItemGroup>
+	
+	<ItemGroup>
+		<!-- Package the generator in the analyzer directory of the nuget package -->
+		<None Include="$(OutputPath)\$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+		<None Include="..\readme.md" Pack="true" PackagePath="\" />
+		<None Include="..\LICENSE" Pack="true" PackagePath="\" />
+		<AdditionalFiles Include="AnalyzerReleases.Shipped.md" />
+		<AdditionalFiles Include="AnalyzerReleases.Unshipped.md" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.10.0"
+			PrivateAssets="all" />
+		<PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.11.0">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
-	</ItemGroup>
-
-	<ItemGroup>
-		<None Include="$(OutputPath)\DependencyInjection.SourceGenerator.Microsoft.Contracts.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
-		<None Include="$(OutputPath)\DependencyInjection.SourceGenerator.Contracts.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
-		<None Include="$(OutputPath)\DependencyInjection.SourceGenerator.Shared.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
-		<None Include="$(OutputPath)\$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
-		<None Include="readme.md" Pack="true" PackagePath="\" />
-	</ItemGroup>
-
-	<ItemGroup>
-		<ProjectReference Include="..\DependencyInjection.SourceGenerator.Microsoft.Contracts\DependencyInjection.SourceGenerator.Microsoft.Contracts.csproj" IncludeAssets="none" PrivateAssets="none" ExcludeAssets="all" />
-		<ProjectReference Include="..\DependencyInjection.SourceGenerator.Contracts\DependencyInjection.SourceGenerator.Contracts.csproj" IncludeAssets="none" PrivateAssets="none" ExcludeAssets="all" />
-		<ProjectReference Include="..\DependencyInjection.SourceGenerator.Shared\DependencyInjection.SourceGenerator.Shared.csproj" IncludeAssets="none" PrivateAssets="none" ExcludeAssets="all" />
+		<PackageReference Include="AvantiPoint.CodeGenHelpers" Version="1.6.20">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+		</PackageReference>
+		<PackageReference Include="PolySharp" Version="1.15.0">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+		</PackageReference>
 	</ItemGroup>
 
 </Project>

@@ -16,6 +16,8 @@
 # Mono auto generated files
 mono_crash.*
 
+*.received.txt
+
 # Build results
 [Dd]ebug/
 [Dd]ebugPublic/
@@ -40,7 +42,7 @@ bld/
 Generated\ Files/
 
 # MSTest test Results
-[Tt]est[Rr]esult*/
+[Tt]est[Rr]esult*(?!verified.txt)
 [Bb]uild[Ll]og.*
 
 # NUnit

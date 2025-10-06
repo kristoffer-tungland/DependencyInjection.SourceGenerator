@@ -3,21 +3,12 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.5.33103.201
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DependencyInjection.SourceGenerator.LightInject", "DependencyInjection.SourceGenerator.LightInject\DependencyInjection.SourceGenerator.LightInject.csproj", "{16627481-D144-4178-9E5D-177E4D0DFE81}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DependencyInjection.SourceGenerator.Contracts", "DependencyInjection.SourceGenerator.Contracts\DependencyInjection.SourceGenerator.Contracts.csproj", "{E62B793F-7BD6-410B-BEBF-0E9EDC8BCC28}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Files", "Files", "{5387CF4F-733F-4A71-A82B-D4733964A06A}"
 	ProjectSection(SolutionItems) = preProject
-		common.targets = common.targets
 		.github\workflows\dotnet.yml = .github\workflows\dotnet.yml
 		LICENSE = LICENSE
 		README.md = README.md
 	EndProjectSection
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DependencyInjection.SourceGenerator.LightInject.Tests", "DependencyInjection.SourceGenerator.LightInject.Tests\DependencyInjection.SourceGenerator.LightInject.Tests.csproj", "{2C2D60A1-7E80-493D-8123-187769EEE855}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DependencyInjection.SourceGenerator.Shared", "DependencyInjection.SourceGenerator.Shared\DependencyInjection.SourceGenerator.Shared.csproj", "{671E49C0-7C64-4FC0-BDB9-0F486CDDD0B7}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DependencyInjection.SourceGenerator.Microsoft", "DependencyInjection.SourceGenerator.Microsoft\DependencyInjection.SourceGenerator.Microsoft.csproj", "{90EAE615-66EA-4AC4-B25C-6970F017700A}"
 EndProject
@@ -25,9 +16,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DependencyInjection.SourceG
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{307324C8-0321-4E96-8C4B-5566A672364A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DependencyInjection.SourceGenerator.LightInject.Contracts", "DependencyInjection.SourceGenerator.LightInject.Contracts\DependencyInjection.SourceGenerator.LightInject.Contracts.csproj", "{87DFF61F-C561-4587-89B8-D360B44A257F}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DependencyInjection.SourceGenerator.Microsoft.Contracts", "DependencyInjection.SourceGenerator.Microsoft.Contracts\DependencyInjection.SourceGenerator.Microsoft.Contracts.csproj", "{15C145AF-074C-4607-B09D-1B1FB3AEE9D2}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DependencyInjection.SourceGenerator.Microsoft.Demo", "DependencyInjection.SourceGenerator.Microsoft.Demo\DependencyInjection.SourceGenerator.Microsoft.Demo.csproj", "{5F349F60-524E-49C2-BF0A-D50C2491AB49}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -35,22 +24,6 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{16627481-D144-4178-9E5D-177E4D0DFE81}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{16627481-D144-4178-9E5D-177E4D0DFE81}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{16627481-D144-4178-9E5D-177E4D0DFE81}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{16627481-D144-4178-9E5D-177E4D0DFE81}.Release|Any CPU.Build.0 = Release|Any CPU
-		{E62B793F-7BD6-410B-BEBF-0E9EDC8BCC28}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{E62B793F-7BD6-410B-BEBF-0E9EDC8BCC28}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{E62B793F-7BD6-410B-BEBF-0E9EDC8BCC28}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{E62B793F-7BD6-410B-BEBF-0E9EDC8BCC28}.Release|Any CPU.Build.0 = Release|Any CPU
-		{2C2D60A1-7E80-493D-8123-187769EEE855}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{2C2D60A1-7E80-493D-8123-187769EEE855}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{2C2D60A1-7E80-493D-8123-187769EEE855}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{2C2D60A1-7E80-493D-8123-187769EEE855}.Release|Any CPU.Build.0 = Release|Any CPU
-		{671E49C0-7C64-4FC0-BDB9-0F486CDDD0B7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{671E49C0-7C64-4FC0-BDB9-0F486CDDD0B7}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{671E49C0-7C64-4FC0-BDB9-0F486CDDD0B7}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{671E49C0-7C64-4FC0-BDB9-0F486CDDD0B7}.Release|Any CPU.Build.0 = Release|Any CPU
 		{90EAE615-66EA-4AC4-B25C-6970F017700A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{90EAE615-66EA-4AC4-B25C-6970F017700A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{90EAE615-66EA-4AC4-B25C-6970F017700A}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -59,21 +32,17 @@ Global
 		{E42AD1F2-3243-4E90-9C01-07E38577925E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E42AD1F2-3243-4E90-9C01-07E38577925E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E42AD1F2-3243-4E90-9C01-07E38577925E}.Release|Any CPU.Build.0 = Release|Any CPU
-		{87DFF61F-C561-4587-89B8-D360B44A257F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{87DFF61F-C561-4587-89B8-D360B44A257F}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{87DFF61F-C561-4587-89B8-D360B44A257F}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{87DFF61F-C561-4587-89B8-D360B44A257F}.Release|Any CPU.Build.0 = Release|Any CPU
-		{15C145AF-074C-4607-B09D-1B1FB3AEE9D2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{15C145AF-074C-4607-B09D-1B1FB3AEE9D2}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{15C145AF-074C-4607-B09D-1B1FB3AEE9D2}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{15C145AF-074C-4607-B09D-1B1FB3AEE9D2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5F349F60-524E-49C2-BF0A-D50C2491AB49}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5F349F60-524E-49C2-BF0A-D50C2491AB49}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5F349F60-524E-49C2-BF0A-D50C2491AB49}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5F349F60-524E-49C2-BF0A-D50C2491AB49}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
-		{2C2D60A1-7E80-493D-8123-187769EEE855} = {307324C8-0321-4E96-8C4B-5566A672364A}
 		{E42AD1F2-3243-4E90-9C01-07E38577925E} = {307324C8-0321-4E96-8C4B-5566A672364A}
+		{5F349F60-524E-49C2-BF0A-D50C2491AB49} = {307324C8-0321-4E96-8C4B-5566A672364A}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {6DC31EA4-A125-4CEA-9C7F-C266B28473ED}

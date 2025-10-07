@@ -12,9 +12,9 @@ public class FactoryBenchmarks
     public void Setup()
     {
         var services = new ServiceCollection();
-    // The generator will emit an extension named based on the assembly name
-    // For this project the generator produces: AddDependencyInjectionSourceGeneratorBenchmarks()
-    services.AddDependencyInjectionSourceGeneratorBenchmarks();
+        // The generator will emit an extension named based on the assembly name
+        // For this project the generator produces: AddDependencyInjectionSourceGeneratorBenchmarks()
+        services.AddDependencyInjectionSourceGeneratorBenchmarks();
         var provider = services.BuildServiceProvider();
         _factory = provider.GetRequiredService<ITestServiceFactory>();
     }

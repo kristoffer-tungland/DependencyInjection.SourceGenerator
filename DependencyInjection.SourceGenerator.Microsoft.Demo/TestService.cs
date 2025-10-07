@@ -1,7 +1,19 @@
-﻿namespace DependencyInjection.SourceGenerator.Microsoft.Demo;
+﻿using Microsoft.Extensions.DependencyInjection;
 
-[global::Microsoft.Extensions.DependencyInjection.Register]
+namespace DependencyInjection.SourceGenerator.Microsoft.Demo;
+
+#pragma warning disable CS9113 
+
+[Register]
 public class TestService
 {
+    public TestService(TestDependency _, [FactoryArgument] int value)
+    {
+        Value = value;
+    }
 
+    public int Value { get; }
 }
+
+[Register]
+public class TestDependency(IServiceProvider _) { };

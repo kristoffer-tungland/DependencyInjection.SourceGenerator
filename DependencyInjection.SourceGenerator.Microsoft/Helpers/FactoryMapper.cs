@@ -69,14 +69,12 @@ internal static class FactoryMapper
         var baseName = CreateBaseName(implementationSymbol);
         var interfaceName = EnsureInterfacePrefix(baseName) + "Factory";
         var className = TrimInterfacePrefix(baseName) + "Factory";
-        var cacheClassName = TrimInterfacePrefix(baseName) + "_FactoryCache";
 
         return new FactoryRegistration
         {
             Namespace = namespaceName,
             InterfaceName = interfaceName,
             ClassName = className,
-            CacheClassName = cacheClassName,
             ServiceTypeName = PrefixGlobal(registration.ServiceType ?? registration.ImplementationTypeName),
             ImplementationTypeName = PrefixGlobal(registration.ImplementationTypeName),
             Parameters = parameters,
@@ -149,6 +147,36 @@ internal static class FactoryMapper
                         .WithParameterList(CreateParameterList(registration.Parameters))
                         .WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken))));
 
+        var createFactoryInvocation = SyntaxFactory.InvocationExpression(
+                SyntaxFactory.MemberAccessExpression(
+                    SyntaxKind.SimpleMemberAccessExpression,
+                    SyntaxFactory.IdentifierName("global::Microsoft.Extensions.DependencyInjection.ActivatorUtilities"),
+                    SyntaxFactory.IdentifierName("CreateFactory")))
+            .WithArgumentList(
+                SyntaxFactory.ArgumentList(
+                    SyntaxFactory.SeparatedList<ArgumentSyntax>(
+                        new SyntaxNodeOrToken[]
+                        {
+                            SyntaxFactory.Argument(
+                                SyntaxFactory.TypeOfExpression(
+                                    SyntaxFactory.ParseTypeName(registration.ImplementationTypeName))),
+                            SyntaxFactory.Token(SyntaxKind.CommaToken),
+                            SyntaxFactory.Argument(CreateFactoryParameterTypesArray(registration.Parameters))
+                        })));
+
+        var objectFactoryVariable = SyntaxFactory.VariableDeclarator(SyntaxFactory.Identifier("_objectFactory"))
+            .WithInitializer(SyntaxFactory.EqualsValueClause(createFactoryInvocation));
+
+        var objectFactoryField = SyntaxFactory.FieldDeclaration(
+                SyntaxFactory.VariableDeclaration(
+                        SyntaxFactory.ParseTypeName("global::Microsoft.Extensions.DependencyInjection.ObjectFactory"))
+                    .WithVariables(
+                        SyntaxFactory.SingletonSeparatedList(objectFactoryVariable)))
+            .WithModifiers(SyntaxFactory.TokenList(
+                SyntaxFactory.Token(SyntaxKind.PrivateKeyword),
+                SyntaxFactory.Token(SyntaxKind.StaticKeyword),
+                SyntaxFactory.Token(SyntaxKind.ReadOnlyKeyword)));
+
         var classDeclaration = SyntaxFactory.ClassDeclaration(registration.ClassName)
             .WithModifiers(SyntaxFactory.TokenList(SyntaxFactory.Token(SyntaxKind.PublicKeyword), SyntaxFactory.Token(SyntaxKind.SealedKeyword)))
             .WithAttributeLists(CreateClassAttributes(generatorVersion))
@@ -158,6 +186,7 @@ internal static class FactoryMapper
                         SyntaxFactory.SimpleBaseType(SyntaxFactory.IdentifierName(registration.InterfaceName)))))
             .WithMembers(SyntaxFactory.List(new MemberDeclarationSyntax[]
             {
+                objectFactoryField,
                 SyntaxFactory.FieldDeclaration(
                         SyntaxFactory.VariableDeclaration(
                                 SyntaxFactory.ParseTypeName("global::System.IServiceProvider"))
@@ -190,45 +219,11 @@ internal static class FactoryMapper
                                 SyntaxFactory.CastExpression(
                                     SyntaxFactory.ParseTypeName(registration.ServiceTypeName),
                                     SyntaxFactory.InvocationExpression(
-                                            SyntaxFactory.MemberAccessExpression(
-                                                SyntaxKind.SimpleMemberAccessExpression,
-                                                SyntaxFactory.IdentifierName(registration.CacheClassName),
-                                                SyntaxFactory.IdentifierName("ObjectFactory")))
+                                            SyntaxFactory.IdentifierName("_objectFactory"))
                                         .WithArgumentList(CreateObjectFactoryArgumentList(registration.Parameters))))))
             }));
 
-        var createFactoryInvocation = SyntaxFactory.InvocationExpression(
-                SyntaxFactory.MemberAccessExpression(
-                    SyntaxKind.SimpleMemberAccessExpression,
-                    SyntaxFactory.IdentifierName("global::Microsoft.Extensions.DependencyInjection.ActivatorUtilities"),
-                    SyntaxFactory.IdentifierName("CreateFactory")))
-            .WithArgumentList(
-                SyntaxFactory.ArgumentList(
-                    SyntaxFactory.SeparatedList<ArgumentSyntax>(
-                        new SyntaxNodeOrToken[]
-                        {
-                            SyntaxFactory.Argument(
-                                SyntaxFactory.TypeOfExpression(
-                                    SyntaxFactory.ParseTypeName(registration.ImplementationTypeName))),
-                            SyntaxFactory.Token(SyntaxKind.CommaToken),
-                            SyntaxFactory.Argument(CreateFactoryParameterTypesArray(registration.Parameters))
-                        })));
-
-        var objectFactoryVariable = SyntaxFactory.VariableDeclarator(SyntaxFactory.Identifier("ObjectFactory"))
-            .WithInitializer(SyntaxFactory.EqualsValueClause(createFactoryInvocation));
-
-        var objectFactoryField = SyntaxFactory.FieldDeclaration(
-                SyntaxFactory.VariableDeclaration(
-                        SyntaxFactory.ParseTypeName("global::Microsoft.Extensions.DependencyInjection.ObjectFactory"))
-                    .WithVariables(
-                        SyntaxFactory.SingletonSeparatedList(objectFactoryVariable)))
-            .WithModifiers(SyntaxFactory.TokenList(SyntaxFactory.Token(SyntaxKind.PublicKeyword), SyntaxFactory.Token(SyntaxKind.StaticKeyword), SyntaxFactory.Token(SyntaxKind.ReadOnlyKeyword)));
-
-        var cacheClassDeclaration = SyntaxFactory.ClassDeclaration(registration.CacheClassName)
-            .WithModifiers(SyntaxFactory.TokenList(SyntaxFactory.Token(SyntaxKind.InternalKeyword), SyntaxFactory.Token(SyntaxKind.StaticKeyword)))
-            .WithMembers(SyntaxFactory.SingletonList<MemberDeclarationSyntax>(objectFactoryField));
-
-        return new MemberDeclarationSyntax[] { interfaceDeclaration, classDeclaration, cacheClassDeclaration };
+        return new MemberDeclarationSyntax[] { interfaceDeclaration, classDeclaration };
     }
 
     private static ArgumentListSyntax CreateObjectFactoryArgumentList(IReadOnlyList<FactoryParameter> parameters)

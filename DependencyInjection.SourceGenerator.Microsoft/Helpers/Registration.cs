@@ -36,7 +36,6 @@ internal sealed class FactoryRegistration
     public required string Namespace { get; init; }
     public required string InterfaceName { get; init; }
     public required string ClassName { get; init; }
-    public required string CacheClassName { get; init; }
     public required string ServiceTypeName { get; init; }
     public required string ImplementationTypeName { get; init; }
     public required IReadOnlyList<FactoryParameter> Parameters { get; init; }

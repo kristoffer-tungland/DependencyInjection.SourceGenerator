@@ -11,6 +11,7 @@ public interface IReportJobFactory
 [global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
 public sealed class ReportJobFactory : IReportJobFactory
 {
+    private static readonly global::Microsoft.Extensions.DependencyInjection.ObjectFactory _objectFactory = global::Microsoft.Extensions.DependencyInjection.ActivatorUtilities.CreateFactory(typeof(global::DependencyInjection.SourceGenerator.Microsoft.Demo.ReportJob), new global::System.Type[] { typeof(global::System.Guid) });
     private readonly global::System.IServiceProvider _serviceProvider;
     public ReportJobFactory(global::System.IServiceProvider serviceProvider)
     {
@@ -19,11 +20,6 @@ public sealed class ReportJobFactory : IReportJobFactory
 
     public global::DependencyInjection.SourceGenerator.Microsoft.Demo.IReportJob Create(global::System.Guid reportId)
     {
-        return (global::DependencyInjection.SourceGenerator.Microsoft.Demo.IReportJob)ReportJob_FactoryCache.ObjectFactory(_serviceProvider, new object[] { reportId });
+        return (global::DependencyInjection.SourceGenerator.Microsoft.Demo.IReportJob)_objectFactory(_serviceProvider, new object[] { reportId });
     }
-}
-
-internal static class ReportJob_FactoryCache
-{
-    public static readonly global::Microsoft.Extensions.DependencyInjection.ObjectFactory ObjectFactory = global::Microsoft.Extensions.DependencyInjection.ActivatorUtilities.CreateFactory(typeof(global::DependencyInjection.SourceGenerator.Microsoft.Demo.ReportJob), new global::System.Type[] { typeof(global::System.Guid) });
 }

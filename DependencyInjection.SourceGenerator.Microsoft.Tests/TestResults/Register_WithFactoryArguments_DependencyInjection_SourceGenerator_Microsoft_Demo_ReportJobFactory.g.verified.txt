@@ -7,7 +7,7 @@ public interface IReportJobFactory
     global::DependencyInjection.SourceGenerator.Microsoft.Demo.IReportJob Create(global::System.Guid reportId);
 }
 
-[global::System.CodeDom.Compiler.GeneratedCode("DependencyInjection.SourceGenerator.Microsoft", "3.0.0.0")]
+[global::System.CodeDom.Compiler.GeneratedCode("DependencyInjection.SourceGenerator.Microsoft", "3.1.0.0")]
 [global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
 public sealed class ReportJobFactory : IReportJobFactory
 {
